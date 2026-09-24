@@ -8,7 +8,7 @@ namespace RDPGuard.Service
     /// <summary>
     /// RDP 远程登录事件监听与检索服务
     /// </summary>
-    public class RdpEventWatcher : IDisposable
+    public class RDPEventWatcher2 : IDisposable
     {
         private EventLogWatcher? _securityWatcher;
         private EventLogWatcher? _tsWatcher;
@@ -256,7 +256,7 @@ namespace RDPGuard.Service
 
             var status = GetEventData("Status");
             var subStatus = GetEventData("SubStatus");
-            var failureReason = GetFailureReason(subStatus, status);
+            var failureReason = isSuccess ? "登录成功" : GetFailureReason(subStatus, status);
 
             var time = record.TimeCreated ?? DateTime.Now;
 
