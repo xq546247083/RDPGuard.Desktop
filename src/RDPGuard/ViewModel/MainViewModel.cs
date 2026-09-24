@@ -356,7 +356,7 @@ namespace RDPGuard.ViewModel
         private void OnRdpEventReceived(RdpEventModel model)
         {
             // 收到实时远程登录事件
-            System.Windows.Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
                 var record = new RdpLoginRecord
                 {

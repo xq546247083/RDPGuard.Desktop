@@ -82,9 +82,10 @@ namespace RDPGuard.Manager
         /// </summary>
         public static void ShowToolTip(string message)
         {
-            if (System.Windows.Application.Current == null) return;
+            if (Application.Current == null)
+                return;
 
-            if (System.Windows.Application.Current.Dispatcher.CheckAccess())
+            if (Application.Current.Dispatcher.CheckAccess())
             {
                 MainViewModel.SnackbarMessageQueue.Enqueue(message);
                 return;
