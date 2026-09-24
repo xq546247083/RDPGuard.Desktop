@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/RDPGuard.Common/RDPGuard.Common.csproj" />
+  <Project Path="src/RDPGuard.SQLite/RDPGuard.SQLite.csproj" />
+  <Project Path="src/RDPGuard/RDPGuard.csproj" />
+</Solution>

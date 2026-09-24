@@ -1,0 +1,636 @@
+<Window x:Class="RDPGuard.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:convert="clr-namespace:RDPGuard.Convert"
+        mc:Ignorable="d"
+        Title="{Binding AppTitle}"
+        Height="720"
+        Width="1080"
+        MinHeight="600"
+        MinWidth="900"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{DynamicResource MaterialDesignFont}"
+        TextElement.FontSize="13"
+        TextElement.FontWeight="Regular"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
+        Closing="MainWindow_Closing">
+
+    <Window.Resources>
+        <convert:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+        <convert:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <convert:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
+        <convert:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+        <convert:ResultToBrushConverter x:Key="ResultToBrushConverter" />
+        <convert:BlockedToBrushConverter x:Key="BlockedToBrushConverter" />
+        <convert:BlockedToTextConverter x:Key="BlockedToTextConverter" />
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- 顶部应用栏与指标看板 -->
+            <RowDefinition Height="Auto" />
+            <!-- 选项卡与主体内容 -->
+            <RowDefinition Height="*" />
+            <!-- 底部状态条 -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部 Header -->
+        <Border Grid.Row="0" Background="#1E293B" Padding="20,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 应用信息 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Viewbox Width="36" Height="36" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,14,0">
+                        <Canvas Width="1024" Height="1024">
+                            <Path Fill="#920783" Data="M754.74122089 512V359.23340839c0-15.22229397-12.50402729-27.72632126-27.72632045-27.72632045-50.0161083 0-97.85760342-19.57152036-133.19507125-54.90898901L531.2996936 214.07796417c-5.43653339-5.43653339-12.50402729-8.15480008-19.57152036-8.1548009v306.07683673h243.01304764z"/>
+                            <Path Fill="#601986" Data="M268.71512561 512v63.06378827c0 64.69474878 25.55170725 126.12757736 71.21858918 171.79445929 47.29784162 47.29784162 109.8179772 71.21858918 171.79445845 71.21858917V512H268.71512561z"/>
+                            <Path Fill="#601986" Data="M827.59076975 536.46440107c-13.59133347 0-24.46440107-10.87306677-24.46440024-24.46440107V314.11018078c0-6.52384039-4.89287989-11.41672027-11.41672028-11.4167211-71.76224268 0-139.17525732-27.72632126-189.73501996-78.82973575l-81.54800244-81.54800243c-3.26192019-2.71826669-6.52384039-3.26192019-8.69845359-3.26192021C498.13683979 139.05380129 487.26377218 128.18073452 487.26377218 114.58940106S498.13683979 90.125 511.72817324 90.125c16.30960016 0 30.98824063 6.52384039 42.40496174 17.39690717l81.54800244 81.54800243c41.31765472 41.31765472 96.77029642 64.15109528 155.48485831 64.15109528 33.16285464 0 60.34552158 27.18266775 60.34552158 60.34552241v197.8898192c0.5436535 14.13498697-10.32941327 25.00805374-23.92074756 25.00805458z"/>
+                            <Path Fill="#920783" Data="M511.72817324 933.875c-90.79010952 0-176.14368567-35.33746783-240.29478093-99.48856311C207.28229702 769.69168811 171.9448292 684.33811197 171.9448292 593.54800244V314.11018078c0-33.16285464 27.18266775-60.34552158 60.34552157-60.3455224 58.71456189 0 114.16720358-22.83344055 155.48485831-64.15109527l81.54800326-81.54800244C480.73993261 96.64884039 495.96222577 90.125 511.72817324 90.125 525.31950672 90.125 536.19257431 100.99806677 536.19257431 114.58940106S525.31950672 139.05380129 511.72817324 139.05380129c-1.63095968 0-4.89287989 0.5436535-8.15480007 3.26192021l-81.54800244 81.54800243C371.46560892 274.96713926 304.05259344 302.69345968 232.29035078 302.69345968c-6.52384039 0-11.41672027 4.89287989-11.41672029 11.4167211v279.43782166c0 77.74242874 30.44458795 150.59197842 85.35357614 206.04462012s128.30219055 85.35357614 206.04462013 85.35357615c13.59133347 0 24.46440107 10.87306677 24.46440106 24.46440022s-11.41672027 24.46440107-25.00805458 24.46440107z"/>
+                            <Path Fill="#601986" Data="M511.72817324 933.875c-13.59133347 0-24.46440107-10.87306677-24.46440106-24.46440107s10.87306677-24.46440107 24.46440106-24.46440022c77.74242874 0 150.59197842-30.44458795 206.04462013-85.35357615 54.90898819-54.90898819 85.35357614-128.30219055 85.35357614-206.04462012v-81.54800244c0-13.59133347 10.87306677-24.46440107 24.46440024-24.46440107s24.46440107 10.87306677 24.46440106 24.46440107v82.09165594c0 90.79010952-35.33746783 176.14368567-99.48856312 240.29478095-64.69474878 64.15109528-150.04832492 99.48856311-240.83843445 99.48856311z"/>
+                        </Canvas>
+                    </Viewbox>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="RDP守护"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="White" />
+                        <TextBlock Text="智能防火墙拦截"
+                                   FontSize="12"
+                                   Foreground="#94A3B8"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- 统计卡片 -->
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <Border Background="#334155" CornerRadius="8" Padding="16,8" Margin="8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="IpNetworkOutline" Foreground="#38BDF8" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <StackPanel>
+                                <TextBlock Text="RDP IP" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{Binding TotalUniqueIps}" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="#334155" CornerRadius="8" Padding="16,8" Margin="8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AlertOctagramOutline" Foreground="#F87171" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <StackPanel>
+                                <TextBlock Text="失败记录" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{Binding TotalFailedCount}" FontSize="18" FontWeight="Bold" Foreground="#F87171"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="#334155" CornerRadius="8" Padding="16,8" Margin="8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Cancel" Foreground="#FB7185" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <StackPanel>
+                                <TextBlock Text="封禁IP" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{Binding TotalBannedCount}" FontSize="18" FontWeight="Bold" Foreground="#FB7185"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 顶部快捷操作 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Command="{Binding ScanHistoryCommand}"
+                            Foreground="White"
+                            BorderBrush="#475569"
+                            Margin="0,0,8,0"
+                            ToolTip="扫描系统事件日志">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="History" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="扫描历史日志"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{Binding RefreshAllCommand}"
+                            Background="#0284C7"
+                            BorderBrush="#0284C7"
+                            ToolTip="刷新数据">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="刷新"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 中部主体区域 -->
+        <Grid Grid.Row="1" Margin="20,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- 搜索与选项卡切换工具栏 -->
+            <Grid Grid.Row="0" Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Tab 切换按钮组 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                 Content="聚合分析"
+                                 IsChecked="{Binding CurrentTab, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=AggregatedIps}" />
+
+                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                 Content="实时登录记录"
+                                 Margin="6,0,0,0"
+                                 IsChecked="{Binding CurrentTab, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=RealtimeLogs}" />
+
+                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                 Content="黑名单管理"
+                                 Margin="6,0,0,0"
+                                 IsChecked="{Binding CurrentTab, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=BannedList}" />
+
+                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                 Content="设置"
+                                 Margin="6,0,0,0"
+                                 IsChecked="{Binding CurrentTab, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Settings}" />
+                </StackPanel>
+
+                <!-- 搜索框 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <TextBox Width="240"
+                             Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="搜索 IP地址/用户名..."
+                             VerticalAlignment="Center"
+                             Margin="0,0,6,0">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Command="{Binding SearchCommand}"
+                            ToolTip="搜索">
+                        <materialDesign:PackIcon Kind="Magnify" />
+                    </Button>
+
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Command="{Binding ClearSearchCommand}"
+                            ToolTip="清空搜索">
+                        <materialDesign:PackIcon Kind="CloseCircleOutline" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- 内容面板区 -->
+            <Grid Grid.Row="1">
+                <!-- 1. IP 聚合显示列表（按相同 IP 聚合） -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CurrentTab}" Value="AggregatedIps">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <DataGrid ItemsSource="{Binding AggregatedIps}"
+                              SelectedItem="{Binding SelectedAggregatedIp}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserSortColumns="True"
+                              materialDesign:DataGridAssist.CellPadding="12,8"
+                              BorderThickness="1"
+                              BorderBrush="#E2E8F0"
+                              Background="White"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <!-- IP 地址 -->
+                            <DataGridTextColumn Header="IP地址"
+                                                Binding="{Binding IpAddress}"
+                                                FontWeight="Bold"
+                                                Width="160" />
+
+                            <!-- 封禁状态 -->
+                            <DataGridTemplateColumn Header="防护状态" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left"
+                                                Background="{Binding IsBlocked, Converter={StaticResource BlockedToBrushConverter}}">
+                                            <TextBlock Text="{Binding IsBlocked, Converter={StaticResource BlockedToTextConverter}}"
+                                                       Foreground="White"
+                                                       FontSize="11"
+                                                       FontWeight="Bold"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- 总尝试次数 -->
+                            <DataGridTextColumn Header="总尝试次数"
+                                                Binding="{Binding TotalAttempts}"
+                                                Width="120" />
+
+                            <!-- 成功次数 -->
+                            <DataGridTemplateColumn Header="成功次数" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SuccessCount}"
+                                                   Foreground="#2E7D32"
+                                                   FontWeight="SemiBold" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- 失败次数 -->
+                            <DataGridTemplateColumn Header="失败次数" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding FailedCount}"
+                                                   Foreground="#C62828"
+                                                   FontWeight="Bold" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- 尝试过的用户名集合 -->
+                            <DataGridTextColumn Header="尝试登录用户名"
+                                                Binding="{Binding AttemptedUserNames}"
+                                                Width="180" />
+
+                            <!-- 首次尝试时间 -->
+                            <DataGridTextColumn Header="首次活跃时间"
+                                                Binding="{Binding FirstAttemptTime, StringFormat='yyyy-MM-dd HH:mm:ss'}"
+                                                Width="150" />
+
+                            <!-- 最后尝试时间 -->
+                            <DataGridTextColumn Header="最后尝试时间"
+                                                Binding="{Binding LastAttemptTime, StringFormat='yyyy-MM-dd HH:mm:ss'}"
+                                                Width="150" />
+
+                            <!-- 操作列 -->
+                            <DataGridTemplateColumn Header="操作" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- 封禁按钮 -->
+                                            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                                    Background="#DC2626"
+                                                    BorderBrush="#DC2626"
+                                                    Foreground="White"
+                                                    Height="28"
+                                                    Padding="8,0"
+                                                    Margin="0,0,6,0"
+                                                    Command="{Binding DataContext.BanIpCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding IpAddress}"
+                                                    Visibility="{Binding IsBlocked, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="ShieldAlert" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                    <TextBlock Text="封禁 IP" FontSize="11"/>
+                                                </StackPanel>
+                                            </Button>
+
+                                            <!-- 解封按钮 -->
+                                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                    Foreground="#16A34A"
+                                                    BorderBrush="#16A34A"
+                                                    Height="28"
+                                                    Padding="8,0"
+                                                    Command="{Binding DataContext.UnbanIpCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding IpAddress}"
+                                                    Visibility="{Binding IsBlocked, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="LockOpenOutline" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                    <TextBlock Text="解封 IP" FontSize="11"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <!-- 2. 实时登录流水（成功和失败） -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CurrentTab}" Value="RealtimeLogs">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <DataGrid ItemsSource="{Binding RealtimeRecords}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserSortColumns="True"
+                              materialDesign:DataGridAssist.CellPadding="10,6"
+                              BorderThickness="1"
+                              BorderBrush="#E2E8F0"
+                              Background="White"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <!-- 时间 -->
+                            <DataGridTextColumn Header="发生时间"
+                                                Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
+                                                Width="150" />
+
+                            <!-- IP 地址 -->
+                            <DataGridTextColumn Header="远程 IP"
+                                                Binding="{Binding IpAddress}"
+                                                FontWeight="Bold"
+                                                Width="140" />
+
+                            <!-- 端口 -->
+                            <DataGridTextColumn Header="远程端口"
+                                                Binding="{Binding Port}"
+                                                Width="80" />
+
+                            <!-- 用户名 -->
+                            <DataGridTextColumn Header="登录账号"
+                                                Binding="{Binding UserName}"
+                                                FontWeight="SemiBold"
+                                                Width="130" />
+
+                            <!-- 域名 -->
+                            <DataGridTextColumn Header="域 / 计算机"
+                                                Binding="{Binding DomainName}"
+                                                Width="110" />
+
+                            <!-- 状态 -->
+                            <DataGridTemplateColumn Header="认证结果" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left"
+                                                Background="{Binding IsSuccess, Converter={StaticResource ResultToBrushConverter}}">
+                                            <TextBlock Foreground="White"
+                                                       FontSize="11"
+                                                       FontWeight="Bold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="失败"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSuccess}" Value="True">
+                                                                <Setter Property="Text" Value="成功"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- 类型 -->
+                            <DataGridTextColumn Header="连接模式"
+                                                Binding="{Binding LogonTypeDescription}"
+                                                Width="120" />
+
+                            <!-- 失败原因/状态码 -->
+                            <DataGridTextColumn Header="原因说明 / 错误代码"
+                                                Binding="{Binding FailureReason}"
+                                                Width="180" />
+
+                            <!-- 事件来源 -->
+                            <DataGridTextColumn Header="Windows 事件源"
+                                                Binding="{Binding EventSource}"
+                                                Width="160" />
+
+                            <!-- 快捷操作 -->
+                            <DataGridTemplateColumn Header="操作" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Foreground="#DC2626"
+                                                BorderBrush="#DC2626"
+                                                Height="26"
+                                                Padding="8,0"
+                                                Command="{Binding DataContext.BanIpCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding IpAddress}">
+                                            <TextBlock Text="封禁此 IP" FontSize="11"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <!-- 3. 黑名单管理 -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CurrentTab}" Value="BannedList">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 手动封禁工具栏 -->
+                    <Border Grid.Row="0" Background="#F8FAFC" CornerRadius="8" Padding="14,10" Margin="0,0,0,12" BorderThickness="1" BorderBrush="#E2E8F0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="手动封禁 IP：" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                            <TextBox Width="200"
+                                     Text="{Binding ManualBanIpInput, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="例如: 192.168.1.100"
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,10,0" />
+                            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Background="#DC2626"
+                                    BorderBrush="#DC2626"
+                                    Command="{Binding ManualBanCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ShieldLock" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="添加到防火墙封禁"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 黑名单表格 -->
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding BannedIps}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              materialDesign:DataGridAssist.CellPadding="12,8"
+                              BorderThickness="1"
+                              BorderBrush="#E2E8F0"
+                              Background="White"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="被封禁 IP 地址"
+                                                Binding="{Binding IpAddress}"
+                                                FontWeight="Bold"
+                                                Width="200" />
+
+                            <DataGridTextColumn Header="封禁生效时间"
+                                                Binding="{Binding BanTime, StringFormat='yyyy-MM-dd HH:mm:ss'}"
+                                                Width="200" />
+
+                            <DataGridTextColumn Header="封禁原因说明"
+                                                Binding="{Binding Reason}"
+                                                Width="300" />
+
+                            <DataGridTemplateColumn Header="操作" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                                Background="#16A34A"
+                                                BorderBrush="#16A34A"
+                                                Foreground="White"
+                                                Height="28"
+                                                Padding="12,0"
+                                                Command="{Binding DataContext.UnbanIpCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding IpAddress}">
+                                            <TextBlock Text="解封并移出黑名单" FontSize="11"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <!-- 4. 设置与自启 -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CurrentTab}" Value="Settings">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel MaxWidth="600" HorizontalAlignment="Left" Margin="10,0">
+                            <!-- 开机自启设置卡片 -->
+                            <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,16" BorderThickness="1" BorderBrush="#E2E8F0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="开机以最高管理员权限自启动" FontSize="15" FontWeight="Bold"/>
+                                        <TextBlock Text="使用 Windows 任务计划程序注册，无需 UAC 弹窗即可随系统开机自动后台防护。"
+                                                   Foreground="#64748B" FontSize="12" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <ToggleButton Grid.Column="1"
+                                                  IsChecked="{Binding IsLaunchOnSysPowerOn}"
+                                                  Command="{Binding ToggleAutoStartCommand}"
+                                                  Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                  VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- 自动封禁阈值设置 -->
+                            <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,16" BorderThickness="1" BorderBrush="#E2E8F0">
+                                <StackPanel>
+                                    <TextBlock Text="暴力破解自动防护策略" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="当同一外部 IP 登录失败尝试达到阈值时，自动调用系统防火墙阻断入站流量。"
+                                               Foreground="#64748B" FontSize="12" Margin="0,4,0,12"/>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,6">
+                                        <TextBlock Text="失败封禁阈值（次）：" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                        <TextBox Width="80"
+                                                 Text="{Binding AutoBanThreshold, UpdateSourceTrigger=PropertyChanged}"
+                                                 Margin="8,0"
+                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="（设为 0 表示仅手动封禁）" VerticalAlignment="Center" Foreground="#94A3B8" FontSize="11"/>
+                                    </StackPanel>
+
+                                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                            Command="{Binding SaveSettingsCommand}"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,12,0,0">
+                                        <TextBlock Text="保存策略设置"/>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 日志清理 -->
+                            <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,16" BorderThickness="1" BorderBrush="#E2E8F0">
+                                <StackPanel>
+                                    <TextBlock Text="数据库维护" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="清空本地 SQLite 数据库中记录的所有登录审计流水。"
+                                               Foreground="#64748B" FontSize="12" Margin="0,4,0,12"/>
+
+                                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Foreground="#DC2626"
+                                            BorderBrush="#DC2626"
+                                            Command="{Binding ClearAllRecordsCommand}"
+                                            HorizontalAlignment="Left">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="TrashCanOutline" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Text="清空本地所有流水记录"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- 底部轻提示 Snackbar -->
+        <materialDesign:Snackbar Grid.Row="2"
+                                 MessageQueue="{Binding SnackbarMessageQueue}" />
+
+        <!-- 遮罩 Loading -->
+        <Grid Grid.Row="0" Grid.RowSpan="3"
+              Background="#66000000"
+              Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border Background="White" CornerRadius="8" Padding="24,18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel HorizontalAlignment="Center">
+                    <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                 Value="0"
+                                 IsIndeterminate="True"
+                                 Width="40"
+                                 Height="40"
+                                 HorizontalAlignment="Center"
+                                 Margin="0,0,0,12"/>
+                    <TextBlock Text="{Binding BusyMessage}" FontSize="13" FontWeight="SemiBold" Foreground="#333333"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
