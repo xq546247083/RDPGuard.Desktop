@@ -22,12 +22,6 @@ namespace RDPGuard.ViewModel
         #region 绑定属性
 
         /// <summary>
-        /// 是否开机自启动
-        /// </summary>
-        [ObservableProperty]
-        private bool isLaunchOnSysPowerOn;
-
-        /// <summary>
         /// 当前封禁的 IP 数量
         /// </summary>
         [ObservableProperty]
@@ -48,23 +42,6 @@ namespace RDPGuard.ViewModel
         #endregion
 
         #region 命令
-
-        /// <summary>
-        /// 切换计划任务开机自启动（最高管理员权限）
-        /// </summary>
-        [RelayCommand]
-        private void ToggleAutoStart()
-        {
-            if (IsLaunchOnSysPowerOn)
-            {
-                var exePath = Environment.ProcessPath ?? AppContext.BaseDirectory;
-                IsLaunchOnSysPowerOn = TaskSchedulerHelper.AddLaunchTask(AppGlobal.AppName, exePath);
-            }
-            else
-            {
-                TaskSchedulerHelper.Delete(AppGlobal.AppName);
-            }
-        }
 
         /// <summary>
         /// 打开主窗口
@@ -96,9 +73,6 @@ namespace RDPGuard.ViewModel
         {
             try
             {
-                // 查询开机自启计划任务
-                IsLaunchOnSysPowerOn = TaskSchedulerHelper.Get(AppGlobal.AppName) != null;
-
                 // 统计数据
                 var activeBans = BannedIpRepository.GetAllActive();
                 BannedCount = activeBans.Count;

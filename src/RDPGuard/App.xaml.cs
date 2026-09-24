@@ -22,17 +22,9 @@ namespace RDPGuard
             // 注册全局异常处理
             RegisterGlobalExceptionHandling();
 
-            // 1. 初始化 SQLite 数据库
             DbInitializer.Initialize();
-
-            // 2. 初始化托盘图标
             NotifyIconManager.Init();
-
-            // 3. 加载核心数据并启动事件监听
-            Lactor.MainViewModel.LoadAllData();
-
-            // 4. 打开主窗口显示
-            Lactor.OpenMainWindow();
+            Lactor.ReLoad();
         }
 
         /// <summary>
