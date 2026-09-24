@@ -19,7 +19,7 @@ namespace RDPGuard.ViewModel
     /// </summary>
     public partial class MainViewModel : ObservableObject
     {
-        private readonly RDPEventWatcher2 _watcher = new();
+        private readonly RDPEventWatcher _watcher = new();
 
         public MainViewModel()
         {

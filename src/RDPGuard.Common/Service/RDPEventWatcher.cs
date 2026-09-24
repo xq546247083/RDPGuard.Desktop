@@ -8,7 +8,7 @@ namespace RDPGuard.Service
     /// <summary>
     /// RDP 远程登录事件监听与检索服务
     /// </summary>
-    public class RDPEventWatcher2 : IDisposable
+    public class RDPEventWatcher : IDisposable
     {
         private EventLogWatcher? _securityWatcher;
         private EventLogWatcher? _tsWatcher;
