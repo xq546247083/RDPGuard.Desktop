@@ -314,6 +314,9 @@ namespace RDPGuard.ViewModel
 
             RefreshAll();
 
+            // 同步防火墙封禁规则（聚合规则与清理遗留单 IP 规则）
+            Task.Run(() => BannedIpRepository.SyncFirewallRules());
+
             // 启动实时监听服务
             _watcher.Start();
         }

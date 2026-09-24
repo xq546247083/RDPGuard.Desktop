@@ -104,5 +104,18 @@ namespace RDPGuard.Repositories
             using var context = new RDPGuardDbContext();
             return context.BannedIps.OrderByDescending(b => b.BanTime).ToList();
         }
+
+        /// <summary>
+        /// 全量同步本地数据库黑名单到系统防火墙（按 1000 IP 聚合并清理遗留规则）
+        /// </summary>
+        public static bool SyncFirewallRules()
+        {
+            lock (LockObj)
+            {
+                using var context = new RDPGuardDbContext();
+                var activeIps = context.BannedIps.Where(b => b.IsActive).Select(b => b.IpAddress).ToList();
+                return FirewallHelper.SyncAllBlockedIps(activeIps);
+            }
+        }
     }
 }

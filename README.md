@@ -38,9 +38,10 @@ RDPGuard.Desktop/
 ├── src/
 │   ├── RDPGuard.Common/             # 公共通用层
 │   │   ├── AppGlobal.cs             # 全局信息配置
+│   │   ├── Enums/                   # 枚举定义 (AppTabType 等)
 │   │   ├── Helper/
 │   │   │   ├── TaskSchedulerHelper.cs  # 计划任务帮助类（开机管理员自启）
-│   │   │   └── FirewallHelper.cs       # Windows 防火墙封禁/解封（COM + netsh 双保障）
+│   │   │   └── FirewallHelper.cs       # Windows 防火墙聚合规则（对齐 IPBan，每条规则容纳 1000 IP，分组 RDPGuard）
 │   │   ├── Model/
 │   │   │   └── RdpEventModel.cs        # RDP 事件领域模型
 │   │   └── Service/
@@ -62,9 +63,7 @@ RDPGuard.Desktop/
 │   └── RDPGuard/                    # WPF 桌面主程序
 │       ├── App.xaml / App.xaml.cs   # 应用入口（单例防重、异常捕获、托盘启动）
 │       ├── app.manifest             # UAC requireAdministrator 清单
-│       ├── Common/                  # 行为与命令扩展 (InvokeCommandActionEx 等)
 │       ├── Convert/                 # WPF 转换器 (EnumToBoolean, ResultToBrush 等)
-│       ├── Enums/                   # 选项卡等枚举定义
 │       ├── Manager/
 │       │   ├── Lactor.cs            # 窗口与 ViewModel 统一调度单例
 │       │   └── NotifyIconManager.cs # 系统托盘管理器

@@ -31,7 +31,10 @@
             </Grid.RowDefinitions>
 
             <!-- 顶部标题栏 -->
-            <Grid Grid.Row="0" Margin="14,10,14,8">
+            <Grid Grid.Row="0" Margin="14,10,14,8" Background="Transparent" Cursor="Hand" ToolTip="点击打开主控制台">
+                <Grid.InputBindings>
+                    <MouseBinding Gesture="LeftClick" Command="{Binding OpenMainWindowCommand}" />
+                </Grid.InputBindings>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Viewbox Width="20" Height="20" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0">
                         <Canvas Width="1024" Height="1024">
@@ -46,16 +49,6 @@
                                FontWeight="Bold"
                                FontSize="14"
                                VerticalAlignment="Center" />
-                </StackPanel>
-                
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Width="30"
-                            Height="30"
-                            Command="{Binding OpenMainWindowCommand}"
-                            Style="{StaticResource MaterialDesignIconForegroundButton}"
-                            ToolTip="打开主界面">
-                        <materialDesign:PackIcon Kind="DockWindow" />
-                    </Button>
                 </StackPanel>
             </Grid>
 
@@ -150,36 +143,8 @@
 
             <Separator Grid.Row="2" VerticalAlignment="Bottom" Margin="0" />
 
-            <!-- 底部开关与退出 -->
-            <StackPanel Grid.Row="3" Margin="10,6,10,10">
-                <Grid Margin="10,4">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="RocketLaunch"
-                                                 VerticalAlignment="Center"
-                                                 Margin="0,0,10,0" />
-                        <TextBlock FontSize="13"
-                                   Text="开机自启动"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-                    <ToggleButton IsChecked="{Binding IsLaunchOnSysPowerOn}"
-                                  Command="{Binding ToggleAutoStartCommand}"
-                                  HorizontalAlignment="Right"
-                                  Style="{StaticResource MaterialDesignSwitchToggleButton}" />
-                </Grid>
-
-                <Button Style="{StaticResource MaterialDesignFlatButton}"
-                        Command="{Binding OpenMainWindowCommand}"
-                        HorizontalContentAlignment="Left"
-                        MinHeight="36"
-                        Padding="10,6">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="ViewDashboardOutline"
-                                                 VerticalAlignment="Center"
-                                                 Margin="0,0,10,0" />
-                        <TextBlock Text="打开防护控制台" />
-                    </StackPanel>
-                </Button>
-
+            <!-- 底部操作：退出 -->
+            <StackPanel Grid.Row="3" Margin="8,4,8,8">
                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                         Command="{Binding ExitCommand}"
                         HorizontalContentAlignment="Left"

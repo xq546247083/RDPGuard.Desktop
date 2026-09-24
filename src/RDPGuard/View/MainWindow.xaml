@@ -25,7 +25,6 @@
         <convert:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
         <convert:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <convert:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
-        <convert:InverseBooleanConverter x:Key="InverseBooleanConverter" />
         <convert:ResultToBrushConverter x:Key="ResultToBrushConverter" />
         <convert:BlockedToBrushConverter x:Key="BlockedToBrushConverter" />
         <convert:BlockedToTextConverter x:Key="BlockedToTextConverter" />

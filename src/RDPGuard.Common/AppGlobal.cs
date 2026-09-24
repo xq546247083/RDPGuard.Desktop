@@ -16,8 +16,8 @@ namespace RDPGuard
         public static string AppChineseName = "RDP 远程登录监控与防护";
 
         /// <summary>
-        /// 防火墙封禁规则前缀
+        /// 防火墙封禁规则前缀（对齐 IPBan 规则规范）
         /// </summary>
-        public static string FirewallRulePrefix = "RDPGuard_Blocked_";
+        public static string FirewallRulePrefix = "RDPGuard_Block_";
     }
 }

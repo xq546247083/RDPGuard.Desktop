@@ -107,8 +107,7 @@ namespace RDPGuard.ViewModel
                 RecentRecords = new ObservableCollection<RdpLoginRecord>(recent);
 
                 var today = DateTime.Today;
-                TodayAttemptsCount = RdpRecordRepository.GetRecentRecords(1000)
-                    .Count(r => r.Timestamp >= today);
+                TodayAttemptsCount = RdpRecordRepository.GetRecentRecords(1000).Count(r => r.Timestamp >= today);
             }
             catch (Exception ex)
             {
