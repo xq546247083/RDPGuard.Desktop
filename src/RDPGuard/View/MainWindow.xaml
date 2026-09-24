@@ -727,6 +727,15 @@
                                         <TextBlock Text="{DynamicResource Str.Setting.ThresholdRemark}" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Surface.SubText}" FontSize="11"/>
                                     </StackPanel>
 
+                                    <StackPanel Orientation="Horizontal" Margin="0,6">
+                                        <TextBlock Text="{DynamicResource Str.Setting.WindowLabel}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                        <TextBox Width="80"
+                                                 Text="{Binding AutoBanWindowMinutes, UpdateSourceTrigger=PropertyChanged}"
+                                                 Margin="8,0"
+                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="{DynamicResource Str.Setting.WindowRemark}" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Surface.SubText}" FontSize="11"/>
+                                    </StackPanel>
+
                                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                                             Command="{Binding SaveSettingsCommand}"
                                             HorizontalAlignment="Left"

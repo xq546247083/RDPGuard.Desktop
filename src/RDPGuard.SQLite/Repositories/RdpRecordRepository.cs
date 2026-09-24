@@ -166,6 +166,20 @@ namespace RDPGuard.Repositories
         }
 
         /// <summary>
+        /// 获取指定 IP 在指定时间之后的登录失败次数（用于滑动时间窗口判定）
+        /// </summary>
+        public static int GetRecentFailureCountByIp(string ipAddress, DateTime sinceTime)
+        {
+            if (string.IsNullOrWhiteSpace(ipAddress)) return 0;
+
+            lock (LockObj)
+            {
+                using var context = new RDPGuardDbContext();
+                return context.RdpLoginRecords.Count(r => r.IpAddress == ipAddress && !r.IsSuccess && r.Timestamp >= sinceTime);
+            }
+        }
+
+        /// <summary>
         /// 清空所有流水记录
         /// </summary>
         public static void ClearAllRecords()

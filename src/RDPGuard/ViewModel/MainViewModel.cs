@@ -93,6 +93,12 @@ namespace RDPGuard.ViewModel
         private int autoBanThreshold = 5;
 
         /// <summary>
+        /// 自动封禁时间窗口（分钟，在此时间段内失败达到阈值即触发封禁，0 表示不限制时间窗口）
+        /// </summary>
+        [ObservableProperty]
+        private int autoBanWindowMinutes = 10;
+
+        /// <summary>
         /// 手动添加封禁的 IP 输入框
         /// </summary>
         [ObservableProperty]
@@ -168,14 +174,15 @@ namespace RDPGuard.ViewModel
                 return;
             }
 
-            var success = BannedIpRepository.BanIp(ip, "管理员手动封禁");
+            var reason = ResourceHelper.GetString("Str.BanReason.Manual");
+            var success = BannedIpRepository.BanIp(ip, reason);
             if (success)
             {
-                ShowMessage($"已成功封禁 IP: {ip}，防火墙已拦截！");
+                ShowMessage(ResourceHelper.GetString("Str.Notify.BanSuccess", ip));
             }
             else
             {
-                ShowMessage($"封禁 IP {ip} 规则添加可能受限，已记录在黑名单中。");
+                ShowMessage(ResourceHelper.GetString("Str.Notify.BanLimited", ip));
             }
 
             RefreshAll();
@@ -191,7 +198,7 @@ namespace RDPGuard.ViewModel
             ip = ip.Trim();
 
             BannedIpRepository.UnbanIp(ip);
-            ShowMessage($"已解除对 IP: {ip} 的封禁");
+            ShowMessage(ResourceHelper.GetString("Str.Notify.UnbanSuccess", ip));
             RefreshAll();
         }
 
@@ -203,7 +210,7 @@ namespace RDPGuard.ViewModel
         {
             if (string.IsNullOrWhiteSpace(ManualBanIpInput))
             {
-                ShowMessage("请输入有效的 IP 地址！");
+                ShowMessage(ResourceHelper.GetString("Str.Notify.InputValidIp"));
                 return;
             }
 
@@ -222,12 +229,12 @@ namespace RDPGuard.ViewModel
             {
                 var exePath = Environment.ProcessPath ?? AppContext.BaseDirectory;
                 IsLaunchOnSysPowerOn = TaskSchedulerHelper.AddLaunchTask(AppGlobal.AppName, exePath);
-                ShowMessage(IsLaunchOnSysPowerOn ? "已成功设置计划任务开机自启（管理员权限）" : "设置自启动失败");
+                ShowMessage(IsLaunchOnSysPowerOn ? ResourceHelper.GetString("Str.Notify.AutoStartSuccess") : ResourceHelper.GetString("Str.Notify.AutoStartFailed"));
             }
             else
             {
                 TaskSchedulerHelper.Delete(AppGlobal.AppName);
-                ShowMessage("已移除计划任务自启动");
+                ShowMessage(ResourceHelper.GetString("Str.Notify.AutoStartRemoved"));
             }
             Lactor.TrayPopupViewModel.ReLoad();
         }
@@ -239,7 +246,8 @@ namespace RDPGuard.ViewModel
         private void SaveSettings()
         {
             SettingRepository.SetInt("AutoBanThreshold", AutoBanThreshold);
-            ShowMessage("设置保存成功！");
+            SettingRepository.SetInt("AutoBanWindowMinutes", AutoBanWindowMinutes);
+            ShowMessage(ResourceHelper.GetString("Str.Dialog.SaveSuccessMsg"));
         }
 
         /// <summary>
@@ -249,7 +257,7 @@ namespace RDPGuard.ViewModel
         private async Task ScanHistoryAsync()
         {
             IsBusy = true;
-            BusyMessage = "正在扫描 Windows 事件查看器中的远程登录历史日志...";
+            BusyMessage = ResourceHelper.GetString("Str.Notify.ScanningBusy");
 
             try
             {
@@ -272,12 +280,12 @@ namespace RDPGuard.ViewModel
                 }).ToList();
 
                 var addedCount = await Task.Run(() => RdpRecordRepository.AddRecords(records));
-                ShowMessage($"扫描完成！已同步导入 {addedCount} 条远程登录记录。");
+                ShowMessage(ResourceHelper.GetString("Str.Notify.ScanSuccess", addedCount));
                 RefreshAll();
             }
             catch (Exception ex)
             {
-                ShowMessage($"扫描历史日志异常: {ex.Message}");
+                ShowMessage(ResourceHelper.GetString("Str.Notify.ScanError", ex.Message));
             }
             finally
             {
@@ -323,6 +331,7 @@ namespace RDPGuard.ViewModel
         {
             // 加载配置
             AutoBanThreshold = SettingRepository.GetInt("AutoBanThreshold", 5);
+            AutoBanWindowMinutes = SettingRepository.GetInt("AutoBanWindowMinutes", 10);
             IsLaunchOnSysPowerOn = TaskSchedulerHelper.Get(AppGlobal.AppName) != null;
 
             RefreshAll();
@@ -379,14 +388,17 @@ namespace RDPGuard.ViewModel
                 if (added)
                 {
                     // 自动封禁策略检测
-                    if (!model.IsSuccess && AutoBanThreshold > 0)
+                    if (!model.IsSuccess && AutoBanThreshold > 0 && !BannedIpRepository.IsBanned(model.IpAddress))
                     {
-                        var ipRecords = RdpRecordRepository.GetRecordsByIp(model.IpAddress);
-                        var failCount = ipRecords.Count(r => !r.IsSuccess);
-                        if (failCount >= AutoBanThreshold && !BannedIpRepository.IsBanned(model.IpAddress))
+                        var sinceTime = AutoBanWindowMinutes > 0 ? DateTime.Now.AddMinutes(-AutoBanWindowMinutes) : DateTime.MinValue;
+                        var failCount = RdpRecordRepository.GetRecentFailureCountByIp(model.IpAddress, sinceTime);
+                        if (failCount >= AutoBanThreshold)
                         {
-                            BannedIpRepository.BanIp(model.IpAddress, $"登录失败达 {failCount} 次，触发自动封禁");
-                            ShowMessage($"警告！IP: {model.IpAddress} 登录失败达 {failCount} 次，已自动加入防火墙封禁！");
+                            var reason = AutoBanWindowMinutes > 0 ? ResourceHelper.GetString("Str.BanReason.AutoBanWindow", AutoBanWindowMinutes, failCount) : ResourceHelper.GetString("Str.BanReason.TotalFail", failCount);
+                            BannedIpRepository.BanIp(model.IpAddress, reason);
+
+                            var notifyMsg = AutoBanWindowMinutes > 0 ? ResourceHelper.GetString("Str.Notify.AutoBanWindow", model.IpAddress, AutoBanWindowMinutes, failCount) : ResourceHelper.GetString("Str.Notify.DefaultFail", model.IpAddress, failCount);
+                            ShowMessage(notifyMsg);
                         }
                     }
 

@@ -100,9 +100,9 @@ namespace RDPGuard.Convert
             if (value is bool isBlocked)
             {
                 var key = isBlocked ? "Str.Status.Blocked" : "Str.Status.Active";
-                return Application.Current?.TryFindResource(key) as string ?? (isBlocked ? "已封禁" : "正常");
+                return Common.ResourceHelper.GetString(key);
             }
-            return Application.Current?.TryFindResource("Str.Status.Unknown") as string ?? "未知";
+            return Common.ResourceHelper.GetString("Str.Status.Unknown");
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

@@ -71,6 +71,10 @@
     <sys:String x:Key="Str.Setting.AutoBlockDesc">当同一外部 IP 登录失败尝试达到阈值时，自动调用系统防火墙阻断入站流量。</sys:String>
     <sys:String x:Key="Str.Setting.ThresholdLabel">失败封禁阈值（次）：</sys:String>
     <sys:String x:Key="Str.Setting.ThresholdRemark">（设为 0 表示仅手动封禁）</sys:String>
+    <sys:String x:Key="Str.Setting.WindowLabel">时间窗口大小（分钟）：</sys:String>
+    <sys:String x:Key="Str.Setting.WindowRemark">（在此时间段内失败次数达到阈值即触发封禁）</sys:String>
+    <sys:String x:Key="Str.BanReason.AutoBanWindow">在 {0} 分钟内登录失败达 {1} 次，触发自动封禁</sys:String>
+    <sys:String x:Key="Str.Notify.AutoBanWindow">警告！IP: {0} 在 {1} 分钟内登录失败达 {2} 次，已自动加入防火墙封禁！</sys:String>
     <sys:String x:Key="Str.Setting.SavePolicy">保存策略设置</sys:String>
     <sys:String x:Key="Str.Setting.DbMaintainTitle">数据库维护</sys:String>
     <sys:String x:Key="Str.Setting.DbMaintainDesc">清空本地 SQLite 数据库中记录的所有登录审计流水。</sys:String>
@@ -103,5 +107,21 @@
     <sys:String x:Key="Str.Dialog.ScanCompleteMsg">扫描完成！已同步导入 {0} 条远程登录记录。</sys:String>
     <sys:String x:Key="Str.Dialog.SaveSuccessTitle">保存成功</sys:String>
     <sys:String x:Key="Str.Dialog.SaveSuccessMsg">配置已保存并生效。</sys:String>
+
+    <!-- 业务通知与操作提示文本 -->
+    <sys:String x:Key="Str.BanReason.Manual">管理员手动封禁</sys:String>
+    <sys:String x:Key="Str.BanReason.TotalFail">登录失败达 {0} 次，触发自动封禁</sys:String>
+    <sys:String x:Key="Str.Notify.BanSuccess">已成功封禁 IP: {0}，防火墙已拦截！</sys:String>
+    <sys:String x:Key="Str.Notify.BanLimited">封禁 IP {0} 规则添加可能受限，已记录在黑名单中。</sys:String>
+    <sys:String x:Key="Str.Notify.UnbanSuccess">已解除对 IP: {0} 的封禁</sys:String>
+    <sys:String x:Key="Str.Notify.InputValidIp">请输入有效的 IP 地址！</sys:String>
+    <sys:String x:Key="Str.Notify.AutoStartSuccess">已成功设置计划任务开机自启（管理员权限）</sys:String>
+    <sys:String x:Key="Str.Notify.AutoStartFailed">设置自启动失败</sys:String>
+    <sys:String x:Key="Str.Notify.AutoStartRemoved">已移除计划任务自启动</sys:String>
+    <sys:String x:Key="Str.Notify.ScanningBusy">正在扫描 Windows 事件查看器中的远程登录历史日志...</sys:String>
+    <sys:String x:Key="Str.Notify.ScanSuccess">扫描完成！已同步导入 {0} 条远程登录记录。</sys:String>
+    <sys:String x:Key="Str.Notify.ScanError">扫描历史日志异常: {0}</sys:String>
+    <sys:String x:Key="Str.Notify.ClearSuccess">已清空本地登录流水记录！</sys:String>
+    <sys:String x:Key="Str.Notify.DefaultFail">警告！IP: {0} 登录失败达 {1} 次，已自动加入防火墙封禁！</sys:String>
 
 </ResourceDictionary>
