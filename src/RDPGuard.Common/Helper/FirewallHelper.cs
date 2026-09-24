@@ -1,32 +1,21 @@
 using System.Diagnostics;
-using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 
 namespace RDPGuard.Helper
 {
     /// <summary>
-    /// Windows 防火墙操作类（聚合规则模式，对齐 IPBan 架构）
-    /// 每条规则最多容纳 1000 个 IP（RDPGuard_Block_0, RDPGuard_Block_1000 等），统一分组为 RDPGuard。
+    /// Windows 防火墙操作类
     /// </summary>
     public static class FirewallHelper
     {
-        /// <summary>
-        /// 每条防火墙规则允许容纳的最大 IP 地址数量（对齐 IPBan 的 MaxIpAddressesPerRule）
-        /// </summary>
-        public const int MaxIpAddressesPerRule = 1000;
-
-        private const string ClsidFwPolicy2 = "{E2B3C97F-6AE1-41AC-817A-F6F92166D7DD}";
-        private const string ClsidFwRule = "{2C5BC43E-3369-4C33-AB0C-BE9469677AF4}";
-        private static readonly object PolicyLock = new();
-
-        private static string RulePrefix => AppGlobal.FirewallRulePrefix; // "RDPGuard_Block_"
-        private static string RuleGroup => AppGlobal.AppName;             // "RDPGuard"
+        private const string _clsidFwPolicy2 = "{E2B3C97F-6AE1-41AC-817A-F6F92166D7DD}";
+        private const string _clsidFwRule = "{2C5BC43E-3369-4C33-AB0C-BE9469677AF4}";
+        private static readonly object _policyLock = new();
 
         #region 公共接口
 
         /// <summary>
-        /// 封禁单个 IP（自动归入聚合防火墙规则中）
+        /// 封禁单个 IP
         /// </summary>
         public static bool BlockIp(string ip, string reason = "")
         {
@@ -35,41 +24,44 @@ namespace RDPGuard.Helper
                 return false;
             }
 
-            lock (PolicyLock)
+            lock (_policyLock)
             {
                 try
                 {
                     var policyObj = CreatePolicy();
                     if (policyObj != null)
                     {
-                        var ruleMap = LoadExistingRules(policyObj);
-
-                        // 1. 检查是否已经在某个规则中
-                        foreach (var kvp in ruleMap)
+                        dynamic policy = policyObj;
+                        dynamic? existingRule = null;
+                        try
                         {
-                            if (kvp.Value.Contains(normalizedIp))
-                            {
-                                return true; // 已经存在，无需重复添加
-                            }
+                            existingRule = policy.Rules.Item(AppGlobal.FirewallRuleName);
                         }
+                        catch { }
 
-                        // 2. 寻找还有空位（< MaxIpAddressesPerRule）的现有规则
-                        foreach (var kvp in ruleMap.OrderBy(k => k.Key))
+                        if (existingRule != null)
                         {
-                            if (kvp.Value.Count < MaxIpAddressesPerRule)
+                            try
                             {
-                                kvp.Value.Add(normalizedIp);
-                                var ruleName = $"{RulePrefix}{kvp.Key}";
-                                UpdateRuleRemoteAddresses(policyObj, ruleName, kvp.Value);
+                                var ips = ParseRemoteAddresses((string)(existingRule.RemoteAddresses ?? string.Empty));
+                                if (!ips.Contains(normalizedIp))
+                                {
+                                    ips.Add(normalizedIp);
+                                    existingRule.RemoteAddresses = string.Join(",", ips);
+                                    existingRule.Enabled = true;
+                                }
                                 return true;
                             }
+                            finally
+                            {
+                                ReleaseComObject(existingRule);
+                            }
                         }
-
-                        // 3. 现有规则全满或暂无规则，新建下一槽位规则
-                        var nextIndex = ruleMap.Count == 0 ? 0 : ruleMap.Keys.Max() + MaxIpAddressesPerRule;
-                        var newRuleName = $"{RulePrefix}{nextIndex}";
-                        CreateBlockRule(policyObj, newRuleName, new List<string> { normalizedIp }, reason);
-                        return true;
+                        else
+                        {
+                            CreateBlockRule(policyObj, new List<string> { normalizedIp }, reason);
+                            return true;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -77,13 +69,12 @@ namespace RDPGuard.Helper
                     Debug.WriteLine($"[FirewallHelper.BlockIp COM 异常]: {ex.Message}");
                 }
 
-                // COM 失败时降级走 netsh
-                return NetshBlockFallback(normalizedIp);
+                return false;
             }
         }
 
         /// <summary>
-        /// 解封单个 IP（从所属的聚合规则中剔除）
+        /// 解封单个 IP
         /// </summary>
         public static bool UnblockIp(string ip)
         {
@@ -92,31 +83,42 @@ namespace RDPGuard.Helper
                 return false;
             }
 
-            lock (PolicyLock)
+            lock (_policyLock)
             {
                 try
                 {
                     var policyObj = CreatePolicy();
                     if (policyObj != null)
                     {
-                        var ruleMap = LoadExistingRules(policyObj);
-
-                        foreach (var kvp in ruleMap)
+                        dynamic policy = policyObj;
+                        dynamic? existingRule = null;
+                        try
                         {
-                            if (kvp.Value.Remove(normalizedIp))
+                            existingRule = policy.Rules.Item(AppGlobal.FirewallRuleName);
+                        }
+                        catch { }
+
+                        if (existingRule != null)
+                        {
+                            try
                             {
-                                var ruleName = $"{RulePrefix}{kvp.Key}";
-                                if (kvp.Value.Count == 0)
+                                var ips = ParseRemoteAddresses((string)(existingRule.RemoteAddresses ?? string.Empty));
+                                if (ips.Remove(normalizedIp))
                                 {
-                                    // 规则已无任何 IP，安全移除该条规则
-                                    DeleteRule(policyObj, ruleName);
-                                }
-                                else
-                                {
-                                    // 更新剩余 IP 列表
-                                    UpdateRuleRemoteAddresses(policyObj, ruleName, kvp.Value);
+                                    if (ips.Count == 0)
+                                    {
+                                        policy.Rules.Remove(AppGlobal.FirewallRuleName);
+                                    }
+                                    else
+                                    {
+                                        existingRule.RemoteAddresses = string.Join(",", ips);
+                                    }
                                 }
                                 return true;
+                            }
+                            finally
+                            {
+                                ReleaseComObject(existingRule);
                             }
                         }
 
@@ -128,7 +130,7 @@ namespace RDPGuard.Helper
                     Debug.WriteLine($"[FirewallHelper.UnblockIp COM 异常]: {ex.Message}");
                 }
 
-                return NetshUnblockFallback(normalizedIp);
+                return false;
             }
         }
 
@@ -142,15 +144,33 @@ namespace RDPGuard.Helper
                 return false;
             }
 
-            lock (PolicyLock)
+            lock (_policyLock)
             {
                 try
                 {
                     var policyObj = CreatePolicy();
                     if (policyObj != null)
                     {
-                        var ruleMap = LoadExistingRules(policyObj);
-                        return ruleMap.Values.Any(ips => ips.Contains(normalizedIp));
+                        dynamic policy = policyObj;
+                        dynamic? existingRule = null;
+                        try
+                        {
+                            existingRule = policy.Rules.Item(AppGlobal.FirewallRuleName);
+                        }
+                        catch { }
+
+                        if (existingRule != null)
+                        {
+                            try
+                            {
+                                var ips = ParseRemoteAddresses((string)(existingRule.RemoteAddresses ?? string.Empty));
+                                return ips.Contains(normalizedIp);
+                            }
+                            finally
+                            {
+                                ReleaseComObject(existingRule);
+                            }
+                        }
                     }
                 }
                 catch { }
@@ -160,11 +180,11 @@ namespace RDPGuard.Helper
         }
 
         /// <summary>
-        /// 获取当前防火墙所有被封禁的 IP 集合
+        /// 获取当前防火墙规则中所有被封禁的 IP 集合
         /// </summary>
         public static HashSet<string> GetAllBlockedIps()
         {
-            lock (PolicyLock)
+            lock (_policyLock)
             {
                 var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 try
@@ -172,12 +192,23 @@ namespace RDPGuard.Helper
                     var policyObj = CreatePolicy();
                     if (policyObj != null)
                     {
-                        var ruleMap = LoadExistingRules(policyObj);
-                        foreach (var set in ruleMap.Values)
+                        dynamic policy = policyObj;
+                        dynamic? existingRule = null;
+                        try
                         {
-                            foreach (var ip in set)
+                            existingRule = policy.Rules.Item(AppGlobal.FirewallRuleName);
+                        }
+                        catch { }
+
+                        if (existingRule != null)
+                        {
+                            try
                             {
-                                result.Add(ip);
+                                return ParseRemoteAddresses((string)(existingRule.RemoteAddresses ?? string.Empty));
+                            }
+                            finally
+                            {
+                                ReleaseComObject(existingRule);
                             }
                         }
                     }
@@ -191,9 +222,7 @@ namespace RDPGuard.Helper
         }
 
         /// <summary>
-        /// 全量同步指定 IP 列表到防火墙（对齐 IPBan 批量聚合机制）
-        /// 1. 按 1000 个一组划分规则槽位（RDPGuard_Block_0, RDPGuard_Block_1000...）
-        /// 2. 自动删除多余或旧单 IP 遗留规则
+        /// 全量同步指定 IP 列表到防火墙
         /// </summary>
         public static bool SyncAllBlockedIps(IEnumerable<string> bannedIps)
         {
@@ -208,7 +237,7 @@ namespace RDPGuard.Helper
 
             validIps = validIps.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
-            lock (PolicyLock)
+            lock (_policyLock)
             {
                 try
                 {
@@ -216,40 +245,34 @@ namespace RDPGuard.Helper
                     if (policyObj == null) return false;
 
                     dynamic policy = policyObj;
-
-                    // 1. 清理旧版可能遗留的非标准单条规则（如 RDPGuard_Blocked_* 或未聚合规则）
-                    CleanLegacyRulesInternal(policyObj);
-
-                    // 2. 按 1000 IP 批量分块
-                    var chunkIndex = 0;
-                    for (int i = 0; i < validIps.Count; i += MaxIpAddressesPerRule)
+                    dynamic? existingRule = null;
+                    try
                     {
-                        var chunk = validIps.Skip(i).Take(MaxIpAddressesPerRule).ToList();
-                        var ruleName = $"{RulePrefix}{i}";
+                        existingRule = policy.Rules.Item(AppGlobal.FirewallRuleName);
+                    }
+                    catch { }
 
-                        dynamic? existingRule = null;
-                        try
-                        {
-                            existingRule = policy.Rules.Item(ruleName);
-                        }
-                        catch { }
-
+                    if (validIps.Count == 0)
+                    {
+                        // 若黑名单为空，清理规则
                         if (existingRule != null)
                         {
-                            existingRule.RemoteAddresses = string.Join(",", chunk);
-                            existingRule.Enabled = true;
                             ReleaseComObject(existingRule);
+                            policy.Rules.Remove(AppGlobal.FirewallRuleName);
                         }
-                        else
-                        {
-                            CreateBlockRule(policyObj, ruleName, chunk, "全量同步封禁黑名单");
-                        }
-
-                        chunkIndex = i + MaxIpAddressesPerRule;
+                        return true;
                     }
 
-                    // 3. 删除多余的槽位规则（例如从 3000 降到 1000 时，清理 Block_2000, Block_3000）
-                    DeleteRulesBeyondIndex(policyObj, validIps.Count == 0 ? 0 : chunkIndex);
+                    if (existingRule != null)
+                    {
+                        existingRule.RemoteAddresses = string.Join(",", validIps);
+                        existingRule.Enabled = true;
+                        ReleaseComObject(existingRule);
+                    }
+                    else
+                    {
+                        CreateBlockRule(policyObj, validIps, "全量同步封禁黑名单");
+                    }
 
                     return true;
                 }
@@ -261,38 +284,19 @@ namespace RDPGuard.Helper
             }
         }
 
-        /// <summary>
-        /// 清理旧版残余的单 IP 规则
-        /// </summary>
-        public static void CleanLegacyRules()
-        {
-            lock (PolicyLock)
-            {
-                try
-                {
-                    var policyObj = CreatePolicy();
-                    if (policyObj != null)
-                    {
-                        CleanLegacyRulesInternal(policyObj);
-                    }
-                }
-                catch { }
-            }
-        }
-
         #endregion
 
         #region COM 内部操作
 
         private static object? CreatePolicy()
         {
-            var type = Type.GetTypeFromCLSID(new Guid(ClsidFwPolicy2));
+            var type = Type.GetTypeFromCLSID(new Guid(_clsidFwPolicy2));
             return type != null ? Activator.CreateInstance(type) : null;
         }
 
         private static object? CreateRule()
         {
-            var type = Type.GetTypeFromCLSID(new Guid(ClsidFwRule));
+            var type = Type.GetTypeFromCLSID(new Guid(_clsidFwRule));
             return type != null ? Activator.CreateInstance(type) : null;
         }
 
@@ -308,49 +312,34 @@ namespace RDPGuard.Helper
             }
         }
 
-        /// <summary>
-        /// 加载所有符合 RDPGuard_Block_{index} 规范的现有规则与对应 IP 集合
-        /// </summary>
-        private static Dictionary<int, HashSet<string>> LoadExistingRules(object policyObj)
+        private static HashSet<string> ParseRemoteAddresses(string remote)
         {
-            var dict = new Dictionary<int, HashSet<string>>();
-            var prefixRegex = new Regex($@"^{Regex.Escape(RulePrefix)}(?<num>\d+)$", RegexOptions.IgnoreCase);
-            dynamic policy = policyObj;
-
-            foreach (dynamic rule in policy.Rules)
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(remote) && remote != "*")
             {
-                try
+                foreach (var part in remote.Split(',', StringSplitOptions.RemoveEmptyEntries))
                 {
-                    string name = (string)rule.Name;
-                    var match = prefixRegex.Match(name);
-                    if (match.Success && int.TryParse(match.Groups["num"].Value, CultureInfo.InvariantCulture, out var index))
+                    var clean = part.Trim();
+                    if (string.IsNullOrEmpty(clean)) continue;
+
+                    // Windows 防火墙导出的 IP 地址格式带掩码，例如：
+                    // 192.168.110.1/255.255.255.255、192.168.110.1/32、fe80::1/128 等
+                    var slashIndex = clean.IndexOf('/');
+                    if (slashIndex > 0)
                     {
-                        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                        string remote = (string)(rule.RemoteAddresses ?? string.Empty);
-                        if (!string.IsNullOrWhiteSpace(remote) && remote != "*")
-                        {
-                            foreach (var part in remote.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                            {
-                                var clean = part.Trim();
-                                if (!string.IsNullOrEmpty(clean))
-                                {
-                                    set.Add(clean);
-                                }
-                            }
-                        }
-                        dict[index] = set;
+                        clean = clean[..slashIndex].Trim();
+                    }
+
+                    if (TryNormalizeIp(clean, out var normalized))
+                    {
+                        set.Add(normalized);
                     }
                 }
-                finally
-                {
-                    ReleaseComObject(rule);
-                }
             }
-
-            return dict;
+            return set;
         }
 
-        private static void CreateBlockRule(object policyObj, string ruleName, List<string> ips, string reason)
+        private static void CreateBlockRule(object policyObj, List<string> ips, string reason)
         {
             dynamic policy = policyObj;
             dynamic? rule = CreateRule();
@@ -358,18 +347,17 @@ namespace RDPGuard.Helper
 
             try
             {
-                // 先尝试删除可能已有的同名规则
-                try { policy.Rules.Remove(ruleName); } catch { }
+                try { policy.Rules.Remove(AppGlobal.FirewallRuleName); } catch { }
 
-                rule.Name = ruleName;
-                rule.Description = $"RDPGuard 拦截恶意远程登录 [组: {RuleGroup}] [原因: {reason}]";
-                rule.Grouping = RuleGroup;
-                rule.Action = 0; // NET_FW_ACTION_BLOCK
-                rule.Direction = 1; // NET_FW_RULE_DIR_IN
+                rule.Name = AppGlobal.FirewallRuleName;
+                rule.Description = $"RDPGuard 拦截恶意远程登录 [组: {AppGlobal.FirewallRuleGroupName}] [原因: {reason}]";
+                rule.Grouping = AppGlobal.FirewallRuleGroupName;
+                rule.Action = 0;
+                rule.Direction = 1;
                 rule.Enabled = true;
                 rule.InterfaceTypes = "All";
                 rule.RemoteAddresses = string.Join(",", ips);
-                rule.Profiles = 0x7FFFFFFF; // NET_FW_PROFILE2_ALL
+                rule.Profiles = 0x7FFFFFFF;
                 rule.EdgeTraversal = false;
 
                 policy.Rules.Add(rule);
@@ -378,136 +366,6 @@ namespace RDPGuard.Helper
             {
                 ReleaseComObject(rule);
             }
-        }
-
-        private static void UpdateRuleRemoteAddresses(object policyObj, string ruleName, IEnumerable<string> ips)
-        {
-            dynamic policy = policyObj;
-            dynamic? rule = null;
-            try
-            {
-                rule = policy.Rules.Item(ruleName);
-                if (rule != null)
-                {
-                    rule.RemoteAddresses = string.Join(",", ips);
-                    rule.Enabled = true;
-                }
-            }
-            catch { }
-            finally
-            {
-                ReleaseComObject(rule);
-            }
-        }
-
-        private static void DeleteRule(object policyObj, string ruleName)
-        {
-            dynamic policy = policyObj;
-            try
-            {
-                policy.Rules.Remove(ruleName);
-            }
-            catch { }
-        }
-
-        private static void DeleteRulesBeyondIndex(object policyObj, int startIndex)
-        {
-            dynamic policy = policyObj;
-            var prefixRegex = new Regex($@"^{Regex.Escape(RulePrefix)}(?<num>\d+)$", RegexOptions.IgnoreCase);
-            var toDelete = new List<string>();
-
-            foreach (dynamic rule in policy.Rules)
-            {
-                try
-                {
-                    string name = (string)rule.Name;
-                    var match = prefixRegex.Match(name);
-                    if (match.Success && int.TryParse(match.Groups["num"].Value, CultureInfo.InvariantCulture, out var index))
-                    {
-                        if (index >= startIndex)
-                        {
-                            toDelete.Add(name);
-                        }
-                    }
-                }
-                finally
-                {
-                    ReleaseComObject(rule);
-                }
-            }
-
-            foreach (var name in toDelete)
-            {
-                try { policy.Rules.Remove(name); } catch { }
-            }
-        }
-
-        private static void CleanLegacyRulesInternal(object policyObj)
-        {
-            dynamic policy = policyObj;
-            var toDelete = new List<string>();
-            var standardRegex = new Regex($@"^{Regex.Escape(RulePrefix)}\d+$", RegexOptions.IgnoreCase);
-
-            foreach (dynamic rule in policy.Rules)
-            {
-                try
-                {
-                    string name = (string)rule.Name;
-                    if (name.StartsWith("RDPGuard_Blocked_", StringComparison.OrdinalIgnoreCase) ||
-                        (name.StartsWith(RulePrefix, StringComparison.OrdinalIgnoreCase) && !standardRegex.IsMatch(name)))
-                    {
-                        toDelete.Add(name);
-                    }
-                }
-                finally
-                {
-                    ReleaseComObject(rule);
-                }
-            }
-
-            foreach (var name in toDelete)
-            {
-                try { policy.Rules.Remove(name); } catch { }
-            }
-        }
-
-        #endregion
-
-        #region netsh 兜底机制
-
-        private static bool NetshBlockFallback(string ip)
-        {
-            // 当 COM 失败时，降级使用 netsh 操作
-            var ruleName = $"{RulePrefix}0";
-            return RunNetsh($"advfirewall firewall add rule name=\"{ruleName}\" dir=in action=block remoteip={ip} group=\"{RuleGroup}\" description=\"RDPGuard Auto Block\"");
-        }
-
-        private static bool NetshUnblockFallback(string ip)
-        {
-            return RunNetsh($"advfirewall firewall delete rule name=\"{RulePrefix}0\"");
-        }
-
-        private static bool RunNetsh(string args)
-        {
-            try
-            {
-                var psi = new ProcessStartInfo("netsh", args)
-                {
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-                using var p = Process.Start(psi);
-                if (p != null)
-                {
-                    p.WaitForExit();
-                    return p.ExitCode == 0;
-                }
-            }
-            catch { }
-
-            return false;
         }
 
         #endregion
@@ -520,12 +378,19 @@ namespace RDPGuard.Helper
             if (string.IsNullOrWhiteSpace(ip)) return false;
 
             ip = ip.Trim();
+
+            // 若包含掩码后缀 (如 /255.255.255.255 或 /32)，剥离掩码提取真实 IP
+            var slashIndex = ip.IndexOf('/');
+            if (slashIndex > 0)
+            {
+                ip = ip[..slashIndex].Trim();
+            }
+
             if (ip.StartsWith("::ffff:", StringComparison.OrdinalIgnoreCase))
             {
                 ip = ip[7..];
             }
 
-            // 过滤无效或本机环回地址
             if (ip == "127.0.0.1" || ip == "::1" || ip == "0.0.0.0" || ip == "-")
             {
                 return false;

@@ -97,15 +97,6 @@ namespace RDPGuard.Repositories
         }
 
         /// <summary>
-        /// 获取所有封禁历史记录
-        /// </summary>
-        public static List<BannedIp> GetAll()
-        {
-            using var context = new RDPGuardDbContext();
-            return context.BannedIps.OrderByDescending(b => b.BanTime).ToList();
-        }
-
-        /// <summary>
         /// 全量同步本地数据库黑名单到系统防火墙（按 1000 IP 聚合并清理遗留规则）
         /// </summary>
         public static bool SyncFirewallRules()

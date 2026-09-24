@@ -101,7 +101,11 @@ namespace RDPGuard.Service
 
             try
             {
-                var queryStr = $"*[System[(EventID=4624 or EventID=4625) and TimeCreated[timediff(@SystemTime) <= {days * 86400000}]]]";
+                long ms = (long)days * 86400000L;
+                var queryStr = days > 0
+                    ? $"*[System[(EventID=4624 or EventID=4625) and TimeCreated[timediff(@SystemTime) <= {ms}]]]"
+                    : "*[System[(EventID=4624 or EventID=4625)]]";
+
                 var query = new EventLogQuery("Security", PathType.LogName, queryStr)
                 {
                     TolerateQueryErrors = true,
@@ -129,8 +133,12 @@ namespace RDPGuard.Service
             // 2. 读取 TS 日志
             try
             {
+                long ms = (long)days * 86400000L;
                 const string tsLogName = "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational";
-                var queryStr = $"*[System[EventID=1149 and TimeCreated[timediff(@SystemTime) <= {days * 86400000}]]]";
+                var queryStr = days > 0
+                    ? $"*[System[EventID=1149 and TimeCreated[timediff(@SystemTime) <= {ms}]]]"
+                    : "*[System[EventID=1149]]";
+
                 var query = new EventLogQuery(tsLogName, PathType.LogName, queryStr)
                 {
                     TolerateQueryErrors = true,
@@ -225,11 +233,12 @@ namespace RDPGuard.Service
                 ip = ip.Substring(7);
             }
 
+            var isSuccess = (eventId == 4624);
             var logonTypeStr = GetEventData("LogonType");
             int.TryParse(logonTypeStr, out var logonType);
 
-            // 只关注远程登录 (10 为远程交互，3 为网络，针对 4625 失败或者 4624 成功)
-            if (logonType != 10 && logonType != 3)
+            // 成功登录必须是远程交互(10)或网络登录(3)；失败登录只要具有有效外部IP即视为远程尝试
+            if (isSuccess && logonType != 10 && logonType != 3)
             {
                 return null;
             }
@@ -245,7 +254,6 @@ namespace RDPGuard.Service
             var portStr = GetEventData("IpPort");
             int.TryParse(portStr, out var port);
 
-            var isSuccess = (eventId == 4624);
             var status = GetEventData("Status");
             var subStatus = GetEventData("SubStatus");
             var failureReason = GetFailureReason(subStatus, status);
