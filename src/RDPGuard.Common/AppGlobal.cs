@@ -24,6 +24,6 @@ namespace RDPGuard
         /// 防火墙封禁规则分组名称
         /// </summary>
         public static string FirewallRuleGroupName = "RDPGuard";
-        
+
     }
 }

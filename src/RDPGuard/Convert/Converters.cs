@@ -63,9 +63,8 @@ namespace RDPGuard.Convert
         {
             if (value is bool isSuccess)
             {
-                return isSuccess
-                    ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2E7D32")) // 绿
-                    : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#C62828")); // 红
+                var key = isSuccess ? "Brush.Status.Success" : "Brush.Status.Danger";
+                return Application.Current?.TryFindResource(key) as Brush ?? (isSuccess ? Brushes.ForestGreen : Brushes.Crimson);
             }
             return Brushes.Gray;
         }
@@ -82,9 +81,8 @@ namespace RDPGuard.Convert
         {
             if (value is bool isBlocked)
             {
-                return isBlocked
-                    ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D32F2F")) // 红色
-                    : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#388E3C")); // 绿色
+                var key = isBlocked ? "Brush.Status.Danger" : "Brush.Status.Success";
+                return Application.Current?.TryFindResource(key) as Brush ?? (isBlocked ? Brushes.Crimson : Brushes.ForestGreen);
             }
             return Brushes.Gray;
         }
@@ -101,9 +99,10 @@ namespace RDPGuard.Convert
         {
             if (value is bool isBlocked)
             {
-                return isBlocked ? "已封禁" : "正常";
+                var key = isBlocked ? "Str.Status.Blocked" : "Str.Status.Active";
+                return Application.Current?.TryFindResource(key) as string ?? (isBlocked ? "已封禁" : "正常");
             }
-            return "未知";
+            return Application.Current?.TryFindResource("Str.Status.Unknown") as string ?? "未知";
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

@@ -12,16 +12,13 @@
         <convert:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </UserControl.Resources>
 
-    <Border CornerRadius="8"
-            Background="#FFFFFF"
-            Width="280"
-            Height="Auto">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="12"
-                              ShadowDepth="1"
-                              Opacity="0.3"
-                              Color="#333333" />
-        </Border.Effect>
+    <materialDesign:Card UniformCornerRadius="8"
+                         Background="{DynamicResource MaterialDesignPaper}"
+                         BorderBrush="{DynamicResource MaterialDesignDivider}"
+                         BorderThickness="1"
+                         Width="280"
+                         Height="Auto"
+                         materialDesign:ElevationAssist.Elevation="Dp6">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -31,23 +28,24 @@
             </Grid.RowDefinitions>
 
             <!-- 顶部标题栏 -->
-            <Grid Grid.Row="0" Margin="14,10,14,8" Background="Transparent" Cursor="Hand" ToolTip="点击打开主控制台">
+            <Grid Grid.Row="0" Margin="14,10,14,8" Background="Transparent" Cursor="Hand" ToolTip="{DynamicResource Str.Tray.OpenConsoleTooltip}">
                 <Grid.InputBindings>
                     <MouseBinding Gesture="LeftClick" Command="{Binding OpenMainWindowCommand}" />
                 </Grid.InputBindings>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Viewbox Width="20" Height="20" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0">
                         <Canvas Width="1024" Height="1024">
-                            <Path Fill="#920783" Data="M754.74122089 512V359.23340839c0-15.22229397-12.50402729-27.72632126-27.72632045-27.72632045-50.0161083 0-97.85760342-19.57152036-133.19507125-54.90898901L531.2996936 214.07796417c-5.43653339-5.43653339-12.50402729-8.15480008-19.57152036-8.1548009v306.07683673h243.01304764z"/>
-                            <Path Fill="#601986" Data="M268.71512561 512v63.06378827c0 64.69474878 25.55170725 126.12757736 71.21858918 171.79445929 47.29784162 47.29784162 109.8179772 71.21858918 171.79445845 71.21858917V512H268.71512561z"/>
-                            <Path Fill="#601986" Data="M827.59076975 536.46440107c-13.59133347 0-24.46440107-10.87306677-24.46440024-24.46440107V314.11018078c0-6.52384039-4.89287989-11.41672027-11.41672028-11.4167211-71.76224268 0-139.17525732-27.72632126-189.73501996-78.82973575l-81.54800244-81.54800243c-3.26192019-2.71826669-6.52384039-3.26192019-8.69845359-3.26192021C498.13683979 139.05380129 487.26377218 128.18073452 487.26377218 114.58940106S498.13683979 90.125 511.72817324 90.125c16.30960016 0 30.98824063 6.52384039 42.40496174 17.39690717l81.54800244 81.54800243c41.31765472 41.31765472 96.77029642 64.15109528 155.48485831 64.15109528 33.16285464 0 60.34552158 27.18266775 60.34552158 60.34552241v197.8898192c0.5436535 14.13498697-10.32941327 25.00805374-23.92074756 25.00805458z"/>
-                            <Path Fill="#920783" Data="M511.72817324 933.875c-90.79010952 0-176.14368567-35.33746783-240.29478093-99.48856311C207.28229702 769.69168811 171.9448292 684.33811197 171.9448292 593.54800244V314.11018078c0-33.16285464 27.18266775-60.34552158 60.34552157-60.3455224 58.71456189 0 114.16720358-22.83344055 155.48485831-64.15109527l81.54800326-81.54800244C480.73993261 96.64884039 495.96222577 90.125 511.72817324 90.125c16.30960016 0 30.98824063 6.52384039 42.40496174 17.39690717l81.54800244 81.54800243c41.31765472 41.31765472 96.77029642 64.15109528 155.48485831 64.15109528 33.16285464 0 60.34552158 27.18266775 60.34552158 60.34552241v197.8898192c0.5436535 14.13498697-10.32941327 25.00805374-23.92074756 25.00805458z"/>
-                            <Path Fill="#601986" Data="M511.72817324 933.875c-13.59133347 0-24.46440107-10.87306677-24.46440106-24.46440107s10.87306677-24.46440107 24.46440106-24.46440022c77.74242874 0 150.59197842-30.44458795 206.04462013-85.35357615 54.90898819-54.90898819 85.35357614-128.30219055 85.35357614-206.04462012v-81.54800244c0-13.59133347 10.87306677-24.46440107 24.46440024-24.46440107s24.46440107 10.87306677 24.46440106 24.46440107v82.09165594c0 90.79010952-35.33746783 176.14368567-99.48856312 240.29478095-64.69474878 64.15109528-150.04832492 99.48856311-240.83843445 99.48856311z"/>
+                            <Path Fill="{DynamicResource Brush.Brand.Primary}" Data="M754.74122089 512V359.23340839c0-15.22229397-12.50402729-27.72632126-27.72632045-27.72632045-50.0161083 0-97.85760342-19.57152036-133.19507125-54.90898901L531.2996936 214.07796417c-5.43653339-5.43653339-12.50402729-8.15480008-19.57152036-8.1548009v306.07683673h243.01304764z"/>
+                            <Path Fill="{DynamicResource Brush.Brand.Secondary}" Data="M268.71512561 512v63.06378827c0 64.69474878 25.55170725 126.12757736 71.21858918 171.79445929 47.29784162 47.29784162 109.8179772 71.21858918 171.79445845 71.21858917V512H268.71512561z"/>
+                            <Path Fill="{DynamicResource Brush.Brand.Secondary}" Data="M827.59076975 536.46440107c-13.59133347 0-24.46440107-10.87306677-24.46440024-24.46440107V314.11018078c0-6.52384039-4.89287989-11.41672027-11.41672028-11.4167211-71.76224268 0-139.17525732-27.72632126-189.73501996-78.82973575l-81.54800244-81.54800243c-3.26192019-2.71826669-6.52384039-3.26192019-8.69845359-3.26192021C498.13683979 139.05380129 487.26377218 128.18073452 487.26377218 114.58940106S498.13683979 90.125 511.72817324 90.125c16.30960016 0 30.98824063 6.52384039 42.40496174 17.39690717l81.54800244 81.54800243c41.31765472 41.31765472 96.77029642 64.15109528 155.48485831 64.15109528 33.16285464 0 60.34552158 27.18266775 60.34552158 60.34552241v197.8898192c0.5436535 14.13498697-10.32941327 25.00805374-23.92074756 25.00805458z"/>
+                            <Path Fill="{DynamicResource Brush.Brand.Primary}" Data="M511.72817324 933.875c-90.79010952 0-176.14368567-35.33746783-240.29478093-99.48856311C207.28229702 769.69168811 171.9448292 684.33811197 171.9448292 593.54800244V314.11018078c0-33.16285464 27.18266775-60.34552158 60.34552157-60.3455224 58.71456189 0 114.16720358-22.83344055 155.48485831-64.15109527l81.54800326-81.54800244C480.73993261 96.64884039 495.96222577 90.125 511.72817324 90.125 525.31950672 90.125 536.19257431 100.99806677 536.19257431 114.58940106S525.31950672 139.05380129 511.72817324 139.05380129c-1.63095968 0-4.89287989 0.5436535-8.15480007 3.26192021l-81.54800244 81.54800243C371.46560892 274.96713926 304.05259344 302.69345968 232.29035078 302.69345968c-6.52384039 0-11.41672027 4.89287989-11.41672029 11.4167211v279.43782166c0 77.74242874 30.44458795 150.59197842 85.35357614 206.04462012s128.30219055 85.35357614 206.04462013 85.35357615c13.59133347 0 24.46440107 10.87306677 24.46440106 24.46440022s-11.41672027 24.46440107-25.00805458 24.46440107z"/>
+                            <Path Fill="{DynamicResource Brush.Brand.Secondary}" Data="M511.72817324 933.875c-13.59133347 0-24.46440107-10.87306677-24.46440106-24.46440107s10.87306677-24.46440107 24.46440106-24.46440022c77.74242874 0 150.59197842-30.44458795 206.04462013-85.35357615 54.90898819-54.90898819 85.35357614-128.30219055 85.35357614-206.04462012v-81.54800244c0-13.59133347 10.87306677-24.46440107 24.46440024-24.46440107s24.46440107 10.87306677 24.46440106 24.46440107v82.09165594c0 90.79010952-35.33746783 176.14368567-99.48856312 240.29478095-64.69474878 64.15109528-150.04832492 99.48856311-240.83843445 99.48856311z"/>
                         </Canvas>
                     </Viewbox>
-                    <TextBlock Text="RDP 远程监控防护"
+                    <TextBlock Text="{DynamicResource Str.App.TrayTitle}"
                                FontWeight="Bold"
                                FontSize="14"
+                               Foreground="{DynamicResource MaterialDesignBody}"
                                VerticalAlignment="Center" />
                 </StackPanel>
             </Grid>
@@ -61,27 +59,60 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Background="#F5F5F5" CornerRadius="6" Padding="8" Margin="0,0,5,0">
+                <Border Grid.Column="0"
+                        Background="{DynamicResource Brush.Status.DangerBg}"
+                        BorderBrush="{DynamicResource Brush.Status.DangerBorder}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="8"
+                        Margin="0,0,5,0">
                     <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="已封禁恶意 IP" FontSize="11" Foreground="#666666" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding BannedCount}" FontSize="18" FontWeight="Bold" Foreground="#D32F2F" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.Tray.BannedMaliciousIps}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource Brush.Surface.MutedText}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding BannedCount}"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource Brush.Status.Danger}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="1" Background="#F5F5F5" CornerRadius="6" Padding="8" Margin="5,0,0,0">
+                <Border Grid.Column="1"
+                        Background="{DynamicResource Brush.Status.InfoBg}"
+                        BorderBrush="{DynamicResource Brush.Status.InfoBorder}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="8"
+                        Margin="5,0,0,0">
                     <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="今日登录尝试" FontSize="11" Foreground="#666666" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding TodayAttemptsCount}" FontSize="18" FontWeight="Bold" Foreground="#1976D2" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.Stat.TodayAttempts}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource Brush.Surface.MutedText}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding TodayAttemptsCount}"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource Brush.Status.Info}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>
 
             <!-- 最近记录列表 -->
             <StackPanel Grid.Row="2" Margin="14,0,14,10">
-                <TextBlock Text="最新远程登录事件" FontSize="12" FontWeight="SemiBold" Foreground="#777777" Margin="0,0,0,6"/>
+                <TextBlock Text="{DynamicResource Str.Stat.RecentEvents}"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Brush.Surface.MutedText}"
+                           Margin="0,0,0,6"/>
                 <ListBox ItemsSource="{Binding RecentRecords}"
                          Background="Transparent"
                          BorderThickness="0"
+                         HorizontalContentAlignment="Stretch"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.VerticalScrollBarVisibility="Disabled">
                     <ListBox.ItemContainerStyle>
@@ -89,12 +120,25 @@
                             <Setter Property="Padding" Value="0" />
                             <Setter Property="Margin" Value="0,2" />
                             <Setter Property="Focusable" Value="False"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter HorizontalAlignment="Stretch"/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
                     </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="#FAFAFA" CornerRadius="4" Padding="6,4">
-                                <Grid>
+                            <Border Background="{DynamicResource Brush.Surface.StatCardBg}"
+                                    BorderBrush="{DynamicResource Brush.Surface.BorderLight}"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="8,5"
+                                    HorizontalAlignment="Stretch">
+                                <Grid HorizontalAlignment="Stretch">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
@@ -102,10 +146,10 @@
                                     </Grid.ColumnDefinitions>
                                     <Ellipse Grid.Column="0" Width="8" Height="8"
                                              Fill="{Binding IsSuccess, Converter={StaticResource ResultToBrushConverter}}"
-                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                             VerticalAlignment="Center" Margin="0,0,8,0"/>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding IpAddress}" FontSize="12" FontWeight="SemiBold"/>
-                                        <TextBlock FontSize="10" Foreground="#888888">
+                                        <TextBlock Text="{Binding IpAddress}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource MaterialDesignBody}"/>
+                                        <TextBlock FontSize="10" Foreground="{DynamicResource Brush.Surface.MutedText}">
                                             <Run Text="{Binding UserName}"/>
                                             <Run Text=" - "/>
                                             <Run Text="{Binding FailureReason}"/>
@@ -114,17 +158,18 @@
                                     <TextBlock Grid.Column="2"
                                                Text="{Binding Timestamp, StringFormat=HH:mm:ss}"
                                                FontSize="10"
-                                               Foreground="#999999"
-                                               VerticalAlignment="Center"/>
+                                               Foreground="{DynamicResource Brush.Surface.SubText}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,0,0"/>
                                 </Grid>
                             </Border>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
 
-                <TextBlock Text="暂无登录记录"
+                <TextBlock Text="{DynamicResource Str.Tray.NoRecentRecords}"
                            FontSize="12"
-                           Foreground="#999999"
+                           Foreground="{DynamicResource Brush.Surface.SubText}"
                            HorizontalAlignment="Center"
                            Margin="0,8"
                            Visibility="{Binding RecentRecords.Count, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -154,10 +199,10 @@
                         <materialDesign:PackIcon Kind="ExitToApp"
                                                  VerticalAlignment="Center"
                                                  Margin="0,0,10,0" />
-                        <TextBlock Text="退出" />
+                        <TextBlock Text="{DynamicResource Str.Tray.Exit}" />
                     </StackPanel>
                 </Button>
             </StackPanel>
         </Grid>
-    </Border>
+    </materialDesign:Card>
 </UserControl>

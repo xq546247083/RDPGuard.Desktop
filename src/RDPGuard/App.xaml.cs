@@ -1,4 +1,5 @@
 using RDPGuard.Manager;
+using RDPGuard.Repositories;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
@@ -25,6 +26,7 @@ namespace RDPGuard
             DbInitializer.Initialize();
             NotifyIconManager.Init();
             Lactor.ReLoad();
+            Task.Run(BannedIpRepository.SyncFirewallRules);
         }
 
         /// <summary>

@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MaterialDesignThemes.Wpf;
+using RDPGuard.Common;
 using RDPGuard.Entities;
 using RDPGuard.Enums;
 using RDPGuard.Helper;
@@ -24,8 +25,8 @@ namespace RDPGuard.ViewModel
         {
             SnackbarMessageQueue = new SnackbarMessageQueue(TimeSpan.FromSeconds(3));
 
-            // 初始化监听事件
             _watcher.OnRdpEventReceived += OnRdpEventReceived;
+            _watcher.Start();
         }
 
         #region 基础属性与选项卡
@@ -155,13 +156,22 @@ namespace RDPGuard.ViewModel
         [RelayCommand]
         private void BanIp(string? ip)
         {
-            if (string.IsNullOrWhiteSpace(ip)) return;
+            if (string.IsNullOrWhiteSpace(ip))
+                return;
+
             ip = ip.Trim();
+            var title = ResourceHelper.GetString("Str.Dialog.ConfirmBanTitle");
+            var msg = ResourceHelper.GetString("Str.Dialog.ConfirmBanMsg", ip);
+            var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result != MessageBoxResult.Yes)
+            {
+                return;
+            }
 
             var success = BannedIpRepository.BanIp(ip, "管理员手动封禁");
             if (success)
             {
-                ShowMessage($"已成功封禁 IP: {ip}，防火墙入站规则已生效！");
+                ShowMessage($"已成功封禁 IP: {ip}，防火墙已拦截！");
             }
             else
             {
@@ -186,7 +196,7 @@ namespace RDPGuard.ViewModel
         }
 
         /// <summary>
-        /// 手动输入 IP 执行封禁
+        /// 手动输入 IP 执行封禁（触发确认弹窗）
         /// </summary>
         [RelayCommand]
         private void ManualBan()
@@ -197,8 +207,9 @@ namespace RDPGuard.ViewModel
                 return;
             }
 
-            BanIp(ManualBanIpInput.Trim());
+            var ip = ManualBanIpInput.Trim();
             ManualBanIpInput = string.Empty;
+            BanIp(ip);
         }
 
         /// <summary>
@@ -280,11 +291,13 @@ namespace RDPGuard.ViewModel
         [RelayCommand]
         private void ClearAllRecords()
         {
-            var result = MessageBox.Show("确定要清空本地所有 RDP 登录审计记录吗？（注意：不会清除 Windows 系统自带日志）", "清空确认", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var title = ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryTitle");
+            var msg = ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsg");
+            var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
             {
                 RdpRecordRepository.ClearAllRecords();
-                ShowMessage("已清空本地登录流水记录！");
+                ShowMessage(ResourceHelper.GetString("Str.Setting.ClearAllLogs"));
                 RefreshAll();
             }
         }
@@ -313,12 +326,6 @@ namespace RDPGuard.ViewModel
             IsLaunchOnSysPowerOn = TaskSchedulerHelper.Get(AppGlobal.AppName) != null;
 
             RefreshAll();
-
-            // 同步防火墙封禁规则（聚合规则与清理遗留单 IP 规则）
-            Task.Run(() => BannedIpRepository.SyncFirewallRules());
-
-            // 启动实时监听服务
-            _watcher.Start();
         }
 
         private void LoadAggregatedIps()

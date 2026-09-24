@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RDPGuard.Entities;
-using RDPGuard.Helper;
 using RDPGuard.Manager;
 using RDPGuard.Repositories;
 using System.Collections.ObjectModel;

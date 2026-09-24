@@ -8,10 +8,10 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <materialDesign:BundledTheme BaseTheme="Light"
-                                             PrimaryColor="Cyan"
-                                             SecondaryColor="Amber" />
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Cyan" SecondaryColor="Amber" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/RDPGuard;component/Resources/Colors.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/RDPGuard;component/Resources/Strings.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <FontFamily x:Key="MaterialDesignFont">Microsoft YaHei UI, Microsoft YaHei, Segoe UI</FontFamily>
         </ResourceDictionary>
