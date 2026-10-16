@@ -264,40 +264,120 @@
                     </StackPanel>
                 </Border>
 
-                <!-- 现代轻量搜索框 -->
-                <Border Grid.Column="2"
-                        Background="{DynamicResource MaterialDesignPaper}"
-                        BorderBrush="{DynamicResource MaterialDesignDivider}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="10,0"
-                        Height="38"
-                        VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="Magnify"
-                                                 Foreground="{DynamicResource Brush.Surface.SubText}"
-                                                 VerticalAlignment="Center"
-                                                 Margin="0,0,6,0"/>
-                        <TextBox Width="200"
-                                 Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="{DynamicResource Str.Search.Placeholder}"
-                                 BorderThickness="0"
-                                 VerticalAlignment="Center">
-                            <TextBox.InputBindings>
-                                <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
-                            </TextBox.InputBindings>
-                        </TextBox>
-                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                Command="{Binding ClearSearchCommand}"
-                                Width="24"
-                                Height="24"
-                                Padding="0"
-                                ToolTip="{DynamicResource Str.Action.ClearSearch}"
-                                Foreground="{DynamicResource Brush.Surface.SubText}">
-                            <materialDesign:PackIcon Kind="CloseCircle" Width="16" Height="16"/>
-                        </Button>
-                    </StackPanel>
-                </Border>
+                <!-- 过滤与搜索工具栏 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- 聚合分析过滤：不显示失败次数为0的 IP -->
+                    <Border CornerRadius="8"
+                            BorderThickness="1"
+                            Height="38"
+                            Padding="14,0"
+                            Margin="0,0,12,0"
+                            VerticalAlignment="Center">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CurrentTab}" Value="AggregatedIps">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding FilterAggregatedOnlyFailed}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource Brush.Status.InfoBg}" />
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Status.InfoBorder}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <CheckBox IsChecked="{Binding FilterAggregatedOnlyFailed}"
+                                  FocusVisualStyle="{x:Null}"
+                                  materialDesign:CheckBoxAssist.CheckBoxSize="20"
+                                  Padding="8,0,0,0"
+                                  VerticalAlignment="Center"
+                                  VerticalContentAlignment="Center"
+                                  Cursor="Hand"
+                                  ToolTip="{DynamicResource Str.Filter.AggregatedToolTip}">
+                            <TextBlock Text="{DynamicResource Str.Filter.HideZeroFailures}"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       Margin="0,-1,0,0" />
+                        </CheckBox>
+                    </Border>
+
+                    <!-- 实时登录记录过滤：仅显示失败记录 -->
+                    <Border CornerRadius="8"
+                            BorderThickness="1"
+                            Height="38"
+                            Padding="14,0"
+                            Margin="0,0,12,0"
+                            VerticalAlignment="Center">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CurrentTab}" Value="RealtimeLogs">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding FilterRealtimeOnlyFailed}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource Brush.Status.InfoBg}" />
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Status.InfoBorder}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <CheckBox IsChecked="{Binding FilterRealtimeOnlyFailed}"
+                                  FocusVisualStyle="{x:Null}"
+                                  materialDesign:CheckBoxAssist.CheckBoxSize="20"
+                                  Padding="8,0,0,0"
+                                  VerticalAlignment="Center"
+                                  VerticalContentAlignment="Center"
+                                  Cursor="Hand"
+                                  ToolTip="{DynamicResource Str.Filter.RealtimeToolTip}">
+                            <TextBlock Text="{DynamicResource Str.Filter.OnlyFailedRecords}"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       Margin="0,-1,0,0" />
+                        </CheckBox>
+                    </Border>
+
+                    <!-- 现代轻量搜索框 -->
+                    <Border Background="{DynamicResource MaterialDesignPaper}"
+                            BorderBrush="{DynamicResource MaterialDesignDivider}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="10,0"
+                            Height="38"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="Magnify"
+                                                     Foreground="{DynamicResource Brush.Surface.SubText}"
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,6,0"/>
+                            <TextBox Width="200"
+                                     Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="{DynamicResource Str.Search.Placeholder}"
+                                     BorderThickness="0"
+                                     VerticalAlignment="Center">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                    Command="{Binding ClearSearchCommand}"
+                                    Width="24"
+                                    Height="24"
+                                    Padding="0"
+                                    ToolTip="{DynamicResource Str.Action.ClearSearch}"
+                                    Foreground="{DynamicResource Brush.Surface.SubText}">
+                                <materialDesign:PackIcon Kind="CloseCircle" Width="16" Height="16"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
             </Grid>
 
             <!-- 内容面板区 -->
@@ -757,16 +837,55 @@
                                     <TextBlock Text="{DynamicResource Str.Setting.DbMaintainDesc}"
                                                Foreground="{DynamicResource Brush.Surface.MutedText}" FontSize="12" Margin="0,4,0,12"/>
 
-                                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                                            Foreground="{DynamicResource Brush.Status.Danger}"
-                                            BorderBrush="{DynamicResource Brush.Status.Danger}"
-                                            Command="{Binding ClearAllRecordsCommand}"
-                                            HorizontalAlignment="Left">
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="TrashCanOutline" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                            <TextBlock Text="{DynamicResource Str.Setting.ClearAllLogs}"/>
-                                        </StackPanel>
-                                    </Button>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Foreground="{DynamicResource Brush.Status.Danger}"
+                                                BorderBrush="{DynamicResource Brush.Status.Danger}"
+                                                Height="38"
+                                                Padding="14,0"
+                                                Command="{Binding ClearAllRecordsCommand}"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="TrashCanOutline" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="{DynamicResource Str.Setting.ClearAllLogs}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Border CornerRadius="8"
+                                                BorderThickness="1"
+                                                Height="38"
+                                                Padding="14,0"
+                                                Margin="16,0,0,0"
+                                                VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding SyncClearSystemLogs}" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource Brush.Status.WarningBg}" />
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Status.WarningBorder}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <CheckBox IsChecked="{Binding SyncClearSystemLogs}"
+                                                      FocusVisualStyle="{x:Null}"
+                                                      materialDesign:CheckBoxAssist.CheckBoxSize="20"
+                                                      Padding="8,0,0,0"
+                                                      VerticalAlignment="Center"
+                                                      VerticalContentAlignment="Center"
+                                                      Cursor="Hand"
+                                                      ToolTip="{DynamicResource Str.Setting.SyncClearSystemLogsToolTip}">
+                                                <TextBlock Text="{DynamicResource Str.Setting.SyncClearSystemLogs}"
+                                                           FontSize="13"
+                                                           FontWeight="SemiBold"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,-1,0,0" />
+                                            </CheckBox>
+                                        </Border>
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

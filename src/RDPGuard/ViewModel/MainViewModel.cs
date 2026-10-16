@@ -40,6 +40,41 @@ namespace RDPGuard.ViewModel
         [ObservableProperty]
         private string searchKeyword = string.Empty;
 
+        /// <summary>
+        /// 聚合分析过滤：不显示失败次数为0的 IP（默认勾选）
+        /// </summary>
+        [ObservableProperty]
+        private bool filterAggregatedOnlyFailed = true;
+
+        partial void OnFilterAggregatedOnlyFailedChanged(bool value)
+        {
+            SettingRepository.SetBool("FilterAggregatedOnlyFailed", value);
+            LoadAggregatedIps();
+        }
+
+        /// <summary>
+        /// 实时登录记录过滤：仅显示失败记录（默认勾选）
+        /// </summary>
+        [ObservableProperty]
+        private bool filterRealtimeOnlyFailed = true;
+
+        partial void OnFilterRealtimeOnlyFailedChanged(bool value)
+        {
+            SettingRepository.SetBool("FilterRealtimeOnlyFailed", value);
+            LoadRealtimeRecords();
+        }
+
+        /// <summary>
+        /// 清空本地流水时是否同步清空系统日志（默认勾选）
+        /// </summary>
+        [ObservableProperty]
+        private bool syncClearSystemLogs = true;
+
+        partial void OnSyncClearSystemLogsChanged(bool value)
+        {
+            SettingRepository.SetBool("SyncClearSystemLogs", value);
+        }
+
         [ObservableProperty]
         private bool isBusy;
 
@@ -300,14 +335,26 @@ namespace RDPGuard.ViewModel
         private void ClearAllRecords()
         {
             var title = ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryTitle");
-            var msg = ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsg");
-            var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result == MessageBoxResult.Yes)
+            var msg = SyncClearSystemLogs? ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsgWithSys"): ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsgNoSys");
+            var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result != MessageBoxResult.Yes)
             {
-                RdpRecordRepository.ClearAllRecords();
-                ShowMessage(ResourceHelper.GetString("Str.Setting.ClearAllLogs"));
-                RefreshAll();
+                return;
             }
+
+            RdpRecordRepository.ClearAllRecords();
+
+            if (SyncClearSystemLogs)
+            {
+                SystemEventHelper.ClearSystemEventLogs();
+                ShowMessage(ResourceHelper.GetString("Str.Notify.ClearSuccessWithSys"));
+            }
+            else
+            {
+                ShowMessage(ResourceHelper.GetString("Str.Notify.ClearSuccess"));
+            }
+
+            RefreshAll();
         }
 
         /// <summary>
@@ -333,6 +380,9 @@ namespace RDPGuard.ViewModel
             AutoBanThreshold = SettingRepository.GetInt("AutoBanThreshold", 5);
             AutoBanWindowMinutes = SettingRepository.GetInt("AutoBanWindowMinutes", 10);
             IsLaunchOnSysPowerOn = TaskSchedulerHelper.Get(AppGlobal.AppName) != null;
+            FilterAggregatedOnlyFailed = SettingRepository.GetBool("FilterAggregatedOnlyFailed", true);
+            FilterRealtimeOnlyFailed = SettingRepository.GetBool("FilterRealtimeOnlyFailed", true);
+            SyncClearSystemLogs = SettingRepository.GetBool("SyncClearSystemLogs", true);
 
             RefreshAll();
         }
@@ -340,13 +390,19 @@ namespace RDPGuard.ViewModel
         private void LoadAggregatedIps()
         {
             var summaries = RdpRecordRepository.GetAggregatedSummaries(SearchKeyword);
-            AggregatedIps = new ObservableCollection<AggregatedIpSummary>(summaries);
             TotalUniqueIps = summaries.Count;
+
+            if (FilterAggregatedOnlyFailed)
+            {
+                summaries = [.. summaries.Where(s => s.FailedCount > 0)];
+            }
+
+            AggregatedIps = new ObservableCollection<AggregatedIpSummary>(summaries);
         }
 
         private void LoadRealtimeRecords()
         {
-            var records = RdpRecordRepository.GetRecentRecords(500, SearchKeyword);
+            var records = RdpRecordRepository.GetRecentRecords(500, SearchKeyword, FilterRealtimeOnlyFailed);
             RealtimeRecords = new ObservableCollection<RdpLoginRecord>(records);
         }
 
@@ -359,7 +415,7 @@ namespace RDPGuard.ViewModel
 
         private void UpdateStats()
         {
-            TotalFailedCount = RdpRecordRepository.GetRecentRecords(5000).Count(r => !r.IsSuccess);
+            TotalFailedCount = RdpRecordRepository.GetTotalFailedCount();
         }
 
         private void OnRdpEventReceived(RdpEventModel model)

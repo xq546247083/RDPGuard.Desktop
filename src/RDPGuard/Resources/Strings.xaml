@@ -36,6 +36,12 @@
     <!-- 搜索占位符 -->
     <sys:String x:Key="Str.Search.Placeholder">搜索 IP地址 / 账号...</sys:String>
 
+    <!-- 过滤复选框文本 -->
+    <sys:String x:Key="Str.Filter.HideZeroFailures">过滤</sys:String>
+    <sys:String x:Key="Str.Filter.AggregatedToolTip">勾选后隐藏登录失败次数为0的IP地址</sys:String>
+    <sys:String x:Key="Str.Filter.OnlyFailedRecords">过滤</sys:String>
+    <sys:String x:Key="Str.Filter.RealtimeToolTip">勾选后仅显示登录失败流水的记录</sys:String>
+
     <!-- DataGrid 表头列名 -->
     <sys:String x:Key="Str.Grid.Action">操作</sys:String>
     <sys:String x:Key="Str.Grid.IpAddress">IP地址</sys:String>
@@ -79,6 +85,8 @@
     <sys:String x:Key="Str.Setting.DbMaintainTitle">数据库维护</sys:String>
     <sys:String x:Key="Str.Setting.DbMaintainDesc">清空本地 SQLite 数据库中记录的所有登录审计流水。</sys:String>
     <sys:String x:Key="Str.Setting.ClearAllLogs">清空本地所有流水记录</sys:String>
+    <sys:String x:Key="Str.Setting.SyncClearSystemLogs">清空系统日志</sys:String>
+    <sys:String x:Key="Str.Setting.SyncClearSystemLogsToolTip">清空本地流水时，同步清除 Windows 系统 Security 安全日志及远程桌面连接日志</sys:String>
 
     <!-- 托盘控件特定文本 -->
     <sys:String x:Key="Str.Tray.OpenConsoleTooltip">点击打开主控制台</sys:String>
@@ -103,6 +111,8 @@
     <sys:String x:Key="Str.Dialog.ConfirmClearRulesMsg">确定要从防火墙清空所有封禁规则吗？</sys:String>
     <sys:String x:Key="Str.Dialog.ConfirmClearHistoryTitle">清空确认</sys:String>
     <sys:String x:Key="Str.Dialog.ConfirmClearHistoryMsg">确定要清空本地所有 RDP 登录审计记录吗？（注意：不会清除 Windows 系统自带日志）</sys:String>
+    <sys:String x:Key="Str.Dialog.ConfirmClearHistoryMsgWithSys">确定要清空本地所有 RDP 登录审计记录，并同步清空 Windows 系统安全日志吗？</sys:String>
+    <sys:String x:Key="Str.Dialog.ConfirmClearHistoryMsgNoSys">确定要清空本地所有 RDP 登录审计记录吗？</sys:String>
     <sys:String x:Key="Str.Dialog.ScanCompleteTitle">扫描完成</sys:String>
     <sys:String x:Key="Str.Dialog.ScanCompleteMsg">扫描完成！已同步导入 {0} 条远程登录记录。</sys:String>
     <sys:String x:Key="Str.Dialog.SaveSuccessTitle">保存成功</sys:String>
@@ -122,6 +132,7 @@
     <sys:String x:Key="Str.Notify.ScanSuccess">扫描完成！已同步导入 {0} 条远程登录记录。</sys:String>
     <sys:String x:Key="Str.Notify.ScanError">扫描历史日志异常: {0}</sys:String>
     <sys:String x:Key="Str.Notify.ClearSuccess">已清空本地登录流水记录！</sys:String>
+    <sys:String x:Key="Str.Notify.ClearSuccessWithSys">已成功清空本地流水记录及系统事件日志！</sys:String>
     <sys:String x:Key="Str.Notify.DefaultFail">警告！IP: {0} 登录失败达 {1} 次，已自动加入防火墙封禁！</sys:String>
 
 </ResourceDictionary>

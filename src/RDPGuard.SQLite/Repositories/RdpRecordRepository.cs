@@ -80,10 +80,15 @@ namespace RDPGuard.Repositories
         /// <summary>
         /// 获取最近的登录流水记录
         /// </summary>
-        public static List<RdpLoginRecord> GetRecentRecords(int count = 500, string? keyword = null)
+        public static List<RdpLoginRecord> GetRecentRecords(int count = 500, string? keyword = null, bool onlyFailed = false)
         {
             using var context = new RDPGuardDbContext();
             IQueryable<RdpLoginRecord> query = context.RdpLoginRecords;
+
+            if (onlyFailed)
+            {
+                query = query.Where(r => !r.IsSuccess);
+            }
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -177,6 +182,15 @@ namespace RDPGuard.Repositories
                 using var context = new RDPGuardDbContext();
                 return context.RdpLoginRecords.Count(r => r.IpAddress == ipAddress && !r.IsSuccess && r.Timestamp >= sinceTime);
             }
+        }
+
+        /// <summary>
+        /// 获取登录失败总记录数
+        /// </summary>
+        public static int GetTotalFailedCount()
+        {
+            using var context = new RDPGuardDbContext();
+            return context.RdpLoginRecords.Count(r => !r.IsSuccess);
         }
 
         /// <summary>
