@@ -335,7 +335,7 @@ namespace RDPGuard.ViewModel
         private void ClearAllRecords()
         {
             var title = ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryTitle");
-            var msg = SyncClearSystemLogs? ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsgWithSys"): ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsgNoSys");
+            var msg = SyncClearSystemLogs ? ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsgWithSys") : ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsgNoSys");
             var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (result != MessageBoxResult.Yes)
             {
