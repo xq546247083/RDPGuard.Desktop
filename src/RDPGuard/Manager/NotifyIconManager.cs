@@ -37,7 +37,7 @@ namespace RDPGuard.Manager
             }
 
             taskbarIcon.ToolTipText = AppGlobal.AppChineseName;
-            taskbarIcon.TrayPopup = Lactor.TrayPopupControl;
+            taskbarIcon.TrayPopup = Locator.TrayPopupControl;
             taskbarIcon.TrayMouseDoubleClick += TaskbarIcon_TrayMouseDoubleClick;
             taskbarIcon.TrayRightMouseUp += TaskbarIcon_TrayRightMouseUp;
 
@@ -57,7 +57,7 @@ namespace RDPGuard.Manager
         /// </summary>
         private static void TaskbarIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e)
         {
-            Lactor.OpenMainWindow();
+            Locator.OpenMainWindow();
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace RDPGuard.Manager
                     ShowActivated = false,
                     AllowsTransparency = true,
                     Background = System.Windows.Media.Brushes.Transparent,
-                    Content = Lactor.TrayPopupControl
+                    Content = Locator.TrayPopupControl
                 };
 
                 dummyWindow.Show();
@@ -93,7 +93,7 @@ namespace RDPGuard.Manager
 
                 if (taskbarIcon != null)
                 {
-                    taskbarIcon.TrayPopup = Lactor.TrayPopupControl;
+                    taskbarIcon.TrayPopup = Locator.TrayPopupControl;
                 }
             }));
         }

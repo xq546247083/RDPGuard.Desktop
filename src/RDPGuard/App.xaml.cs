@@ -41,19 +41,19 @@ namespace RDPGuard
         private void Application_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             e.Handled = true;
-            Lactor.ShowToolTip($"异常: {e.Exception?.Message ?? string.Empty}");
+            Locator.ShowToolTip($"异常: {e.Exception?.Message ?? string.Empty}");
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             var exception = e.ExceptionObject as Exception;
-            Lactor.ShowToolTip($"非UI异常: {exception?.Message ?? string.Empty}");
+            Locator.ShowToolTip($"非UI异常: {exception?.Message ?? string.Empty}");
         }
 
         private void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
             e.SetObserved();
-            Lactor.ShowToolTip($"Task异常: {e.Exception?.Message ?? string.Empty}");
+            Locator.ShowToolTip($"Task异常: {e.Exception?.Message ?? string.Empty}");
         }
 
         /// <summary>

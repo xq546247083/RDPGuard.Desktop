@@ -9,7 +9,7 @@ namespace RDPGuard.Manager
     /// <summary>
     /// 加载器
     /// </summary>
-    public static class Lactor
+    public static class Locator
     {
         #region Win32 API
 

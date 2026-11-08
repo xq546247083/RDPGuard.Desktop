@@ -53,7 +53,7 @@ namespace RDPGuard.ViewModel
         [RelayCommand]
         private void OpenMainWindow()
         {
-            Lactor.OpenMainWindow();
+            Locator.OpenMainWindow();
             NotifyIconManager.Close();
         }
 

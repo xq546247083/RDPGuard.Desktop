@@ -10,7 +10,7 @@ namespace RDPGuard.View
         public TrayPopupControl()
         {
             InitializeComponent();
-            DataContext = Lactor.TrayPopupViewModel;
+            DataContext = Locator.TrayPopupViewModel;
         }
     }
 }

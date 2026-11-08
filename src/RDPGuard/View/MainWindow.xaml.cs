@@ -12,7 +12,7 @@ namespace RDPGuard
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = Lactor.MainViewModel;
+            DataContext = Locator.MainViewModel;
         }
 
         private void MainWindow_Closing(object? sender, CancelEventArgs e)
