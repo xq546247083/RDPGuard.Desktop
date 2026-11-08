@@ -11,466 +11,465 @@ using RDPGuard.Service;
 using System.Collections.ObjectModel;
 using System.Windows;
 
-namespace RDPGuard.ViewModel
+namespace RDPGuard.ViewModel;
+
+/// <summary>
+/// 主界面 ViewModel
+/// </summary>
+public partial class MainViewModel : ObservableObject
 {
-    /// <summary>
-    /// 主界面 ViewModel
-    /// </summary>
-    public partial class MainViewModel : ObservableObject
+    private readonly RDPEventWatcher _watcher = new();
+
+    public MainViewModel()
     {
-        private readonly RDPEventWatcher _watcher = new();
+        AppTitle = $"{AppGlobal.AppChineseName} V{System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0"}";
+        SnackbarMessageQueue = new SnackbarMessageQueue(TimeSpan.FromSeconds(3));
+        DbChangeNotifier.OnDatabaseChanged += OnDatabaseChanged;
 
-        public MainViewModel()
+        _watcher.OnRdpEventReceived += OnRdpEventReceived;
+        _watcher.Start();
+        
+        LoadAllData();
+    }
+
+    #region 基础属性与选项卡
+
+    [ObservableProperty]
+    private string appTitle = $"{AppGlobal.AppChineseName} v1.0";
+
+    [ObservableProperty]
+    private AppTabType currentTab = AppTabType.AggregatedIps;
+
+    [ObservableProperty]
+    private string searchKeyword = string.Empty;
+
+    /// <summary>
+    /// 聚合分析过滤：不显示失败次数为0的 IP（默认勾选）
+    /// </summary>
+    [ObservableProperty]
+    private bool filterAggregatedOnlyFailed = true;
+
+    partial void OnFilterAggregatedOnlyFailedChanged(bool value)
+    {
+        SettingRepository.SetBool("FilterAggregatedOnlyFailed", value);
+        LoadAllData();
+    }
+
+    /// <summary>
+    /// 实时登录记录过滤：仅显示失败记录（默认勾选）
+    /// </summary>
+    [ObservableProperty]
+    private bool filterRealtimeOnlyFailed = true;
+
+    partial void OnFilterRealtimeOnlyFailedChanged(bool value)
+    {
+        SettingRepository.SetBool("FilterRealtimeOnlyFailed", value);
+        LoadAllData();
+    }
+
+    /// <summary>
+    /// 清空本地流水时是否同步清空系统日志（默认勾选）
+    /// </summary>
+    [ObservableProperty]
+    private bool syncClearSystemLogs = true;
+
+    partial void OnSyncClearSystemLogsChanged(bool value)
+    {
+        SettingRepository.SetBool("SyncClearSystemLogs", value);
+    }
+
+    [ObservableProperty]
+    private bool isBusy;
+
+    [ObservableProperty]
+    private string busyMessage = string.Empty;
+
+    public SnackbarMessageQueue SnackbarMessageQueue { get; }
+
+    #endregion
+
+    #region 核心数据集合
+
+    /// <summary>
+    /// 相同 IP 聚合显示列表
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<AggregatedIpSummary> aggregatedIps = new();
+
+    /// <summary>
+    /// 选中的聚合 IP
+    /// </summary>
+    [ObservableProperty]
+    private AggregatedIpSummary? selectedAggregatedIp;
+
+    /// <summary>
+    /// 实时登录流水（包含成功和失败）
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<RdpLoginRecord> realtimeRecords = new();
+
+    /// <summary>
+    /// 当前封禁黑名单
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<BannedIp> bannedIps = new();
+
+    #endregion
+
+    #region 设置与统计
+
+    /// <summary>
+    /// 开机自启动
+    /// </summary>
+    [ObservableProperty]
+    private bool isLaunchOnSysPowerOn;
+
+    /// <summary>
+    /// 自动封禁阈值（失败超过此次数自动封禁，0 表示不自动封禁）
+    /// </summary>
+    [ObservableProperty]
+    private int autoBanThreshold = 5;
+
+    /// <summary>
+    /// 自动封禁时间窗口（分钟，在此时间段内失败达到阈值即触发封禁，0 表示不限制时间窗口）
+    /// </summary>
+    [ObservableProperty]
+    private int autoBanWindowMinutes = 10;
+
+    /// <summary>
+    /// 手动添加封禁的 IP 输入框
+    /// </summary>
+    [ObservableProperty]
+    private string manualBanIpInput = string.Empty;
+
+    /// <summary>
+    /// 统计：总 IP 计数
+    /// </summary>
+    [ObservableProperty]
+    private int totalUniqueIps;
+
+    /// <summary>
+    /// 统计：总拦截或失败次数
+    /// </summary>
+    [ObservableProperty]
+    private int totalFailedCount;
+
+    /// <summary>
+    /// 统计：已封禁数
+    /// </summary>
+    [ObservableProperty]
+    private int totalBannedCount;
+
+    #endregion
+
+    #region 业务命令
+
+    /// <summary>
+    /// 切换选项卡
+    /// </summary>
+    [RelayCommand]
+    private void SwitchTab(AppTabType tab)
+    {
+        CurrentTab = tab;
+    }
+
+    /// <summary>
+    /// 搜索过滤
+    /// </summary>
+    [RelayCommand]
+    private void Search()
+    {
+        LoadAllData();
+    }
+
+    /// <summary>
+    /// 重置搜索
+    /// </summary>
+    [RelayCommand]
+    private void ClearSearch()
+    {
+        SearchKeyword = string.Empty;
+        LoadAllData();
+    }
+
+    /// <summary>
+    /// 封禁指定 IP
+    /// </summary>
+    [RelayCommand]
+    private void BanIp(string? ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip))
+            return;
+
+        ip = ip.Trim();
+        var title = ResourceHelper.GetString("Str.Dialog.ConfirmBanTitle");
+        var msg = ResourceHelper.GetString("Str.Dialog.ConfirmBanMsg", ip);
+        var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (result != MessageBoxResult.Yes)
         {
-            AppTitle = $"{AppGlobal.AppChineseName} V{System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0"}";
-            SnackbarMessageQueue = new SnackbarMessageQueue(TimeSpan.FromSeconds(3));
-            DbChangeNotifier.OnDatabaseChanged += OnDatabaseChanged;
+            return;
+        }
 
-            _watcher.OnRdpEventReceived += OnRdpEventReceived;
-            _watcher.Start();
-            
+        var reason = ResourceHelper.GetString("Str.BanReason.Manual");
+        var success = BannedIpRepository.BanIp(ip, reason);
+        if (success)
+        {
+            ShowMessage(ResourceHelper.GetString("Str.Notify.BanSuccess", ip));
+        }
+        else
+        {
+            ShowMessage(ResourceHelper.GetString("Str.Notify.BanLimited", ip));
+        }
+    }
+
+    /// <summary>
+    /// 解封指定 IP
+    /// </summary>
+    [RelayCommand]
+    private void UnbanIp(string? ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip)) return;
+        ip = ip.Trim();
+
+        BannedIpRepository.UnbanIp(ip);
+        ShowMessage(ResourceHelper.GetString("Str.Notify.UnbanSuccess", ip));
+    }
+
+    /// <summary>
+    /// 手动输入 IP 执行封禁（触发确认弹窗）
+    /// </summary>
+    [RelayCommand]
+    private void ManualBan()
+    {
+        if (string.IsNullOrWhiteSpace(ManualBanIpInput))
+        {
+            ShowMessage(ResourceHelper.GetString("Str.Notify.InputValidIp"));
+            return;
+        }
+
+        var ip = ManualBanIpInput.Trim();
+        ManualBanIpInput = string.Empty;
+        BanIp(ip);
+    }
+
+    /// <summary>
+    /// 切换开机自启动
+    /// </summary>
+    [RelayCommand]
+    private void ToggleAutoStart()
+    {
+        if (IsLaunchOnSysPowerOn)
+        {
+            var exePath = Environment.ProcessPath ?? AppContext.BaseDirectory;
+            IsLaunchOnSysPowerOn = TaskSchedulerHelper.Add(AppGlobal.AppName, exePath);
+            ShowMessage(IsLaunchOnSysPowerOn ? ResourceHelper.GetString("Str.Notify.AutoStartSuccess") : ResourceHelper.GetString("Str.Notify.AutoStartFailed"));
+        }
+        else
+        {
+            TaskSchedulerHelper.Delete(AppGlobal.AppName);
+            ShowMessage(ResourceHelper.GetString("Str.Notify.AutoStartRemoved"));
+        }
+    }
+
+    /// <summary>
+    /// 保存配置（如自动封禁阈值）
+    /// </summary>
+    [RelayCommand]
+    private void SaveSettings()
+    {
+        SettingRepository.SetInt("AutoBanThreshold", AutoBanThreshold);
+        SettingRepository.SetInt("AutoBanWindowMinutes", AutoBanWindowMinutes);
+        ShowMessage(ResourceHelper.GetString("Str.Dialog.SaveSuccessMsg"));
+    }
+
+    /// <summary>
+    /// 扫描 Windows 历史事件日志
+    /// </summary>
+    [RelayCommand]
+    private async Task ScanHistoryAsync()
+    {
+        IsBusy = true;
+        BusyMessage = ResourceHelper.GetString("Str.Notify.ScanningBusy");
+
+        try
+        {
+            var events = await Task.Run(() => _watcher.ScanHistory());
+            var records = events.Select(e => new RdpLoginRecord
+            {
+                EventRecordId = e.RecordId,
+                Timestamp = e.Timestamp,
+                IpAddress = e.IpAddress,
+                Port = e.Port,
+                UserName = e.UserName,
+                DomainName = e.DomainName,
+                IsSuccess = e.IsSuccess,
+                LogonType = e.LogonType,
+                LogonTypeDescription = e.LogonTypeDescription,
+                FailureReason = e.FailureReason,
+                Status = e.Status,
+                SubStatus = e.SubStatus,
+                EventSource = e.EventSource
+            }).ToList();
+
+            var addedCount = await Task.Run(() => RdpRecordRepository.AddRecords(records));
+            ShowMessage(ResourceHelper.GetString("Str.Notify.ScanSuccess", addedCount));
+        }
+        catch (Exception ex)
+        {
+            ShowMessage(ResourceHelper.GetString("Str.Notify.ScanError", ex.Message));
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// 清空所有记录
+    /// </summary>
+    [RelayCommand]
+    private void ClearAllRecords()
+    {
+        var title = ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryTitle");
+        var msg = SyncClearSystemLogs ? ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsgWithSys") : ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsgNoSys");
+        var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (result != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        RdpRecordRepository.ClearAllRecords();
+
+        if (SyncClearSystemLogs)
+        {
+            SystemEventHelper.ClearSystemEventLogs();
+            ShowMessage(ResourceHelper.GetString("Str.Notify.ClearSuccessWithSys"));
+        }
+        else
+        {
+            ShowMessage(ResourceHelper.GetString("Str.Notify.ClearSuccess"));
+        }
+    }
+
+    /// <summary>
+    /// 刷新所有数据
+    /// </summary>
+    [RelayCommand]
+    public void LoadAllData()
+    {
+        LoadConfig();
+        LoadAggregatedIps();
+        LoadRealtimeRecords();
+        LoadBannedList();
+        LoadStats();
+    }
+
+    #endregion
+
+    #region 数据加载与实时事件处理
+
+    public void LoadConfig()
+    {
+        AutoBanThreshold = SettingRepository.GetInt("AutoBanThreshold", 5);
+        AutoBanWindowMinutes = SettingRepository.GetInt("AutoBanWindowMinutes", 10);
+        IsLaunchOnSysPowerOn = TaskSchedulerHelper.Exists(AppGlobal.AppName);
+        FilterAggregatedOnlyFailed = SettingRepository.GetBool("FilterAggregatedOnlyFailed", true);
+        FilterRealtimeOnlyFailed = SettingRepository.GetBool("FilterRealtimeOnlyFailed", true);
+        SyncClearSystemLogs = SettingRepository.GetBool("SyncClearSystemLogs", true);
+    }
+
+    private void LoadAggregatedIps()
+    {
+        var summaries = RdpRecordRepository.GetAggregatedSummaries(SearchKeyword);
+        TotalUniqueIps = summaries.Count;
+
+        if (FilterAggregatedOnlyFailed)
+        {
+            summaries = [.. summaries.Where(s => s.FailedCount > 0)];
+        }
+
+        AggregatedIps = new ObservableCollection<AggregatedIpSummary>(summaries);
+    }
+
+    private void LoadRealtimeRecords()
+    {
+        var records = RdpRecordRepository.GetRecentRecords(500, SearchKeyword, FilterRealtimeOnlyFailed);
+        RealtimeRecords = new ObservableCollection<RdpLoginRecord>(records);
+    }
+
+    private void LoadBannedList()
+    {
+        var banned = BannedIpRepository.GetAllActive();
+        BannedIps = new ObservableCollection<BannedIp>(banned);
+        TotalBannedCount = banned.Count;
+    }
+
+    private void LoadStats()
+    {
+        TotalFailedCount = RdpRecordRepository.GetTotalFailedCount();
+    }
+
+    /// <summary>
+    /// 响应底层数据库变更通知
+    /// </summary>
+    private void OnDatabaseChanged()
+    {
+        if (Application.Current?.Dispatcher.CheckAccess() == true)
+        {
             LoadAllData();
+            return;
         }
 
-        #region 基础属性与选项卡
+        Application.Current?.Dispatcher.Invoke(LoadAllData);
+    }
 
-        [ObservableProperty]
-        private string appTitle = $"{AppGlobal.AppChineseName} v1.0";
-
-        [ObservableProperty]
-        private AppTabType currentTab = AppTabType.AggregatedIps;
-
-        [ObservableProperty]
-        private string searchKeyword = string.Empty;
-
-        /// <summary>
-        /// 聚合分析过滤：不显示失败次数为0的 IP（默认勾选）
-        /// </summary>
-        [ObservableProperty]
-        private bool filterAggregatedOnlyFailed = true;
-
-        partial void OnFilterAggregatedOnlyFailedChanged(bool value)
+    private void OnRdpEventReceived(RdpEventModel model)
+    {
+        // 收到实时远程登录事件
+        Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
         {
-            SettingRepository.SetBool("FilterAggregatedOnlyFailed", value);
-            LoadAllData();
-        }
-
-        /// <summary>
-        /// 实时登录记录过滤：仅显示失败记录（默认勾选）
-        /// </summary>
-        [ObservableProperty]
-        private bool filterRealtimeOnlyFailed = true;
-
-        partial void OnFilterRealtimeOnlyFailedChanged(bool value)
-        {
-            SettingRepository.SetBool("FilterRealtimeOnlyFailed", value);
-            LoadAllData();
-        }
-
-        /// <summary>
-        /// 清空本地流水时是否同步清空系统日志（默认勾选）
-        /// </summary>
-        [ObservableProperty]
-        private bool syncClearSystemLogs = true;
-
-        partial void OnSyncClearSystemLogsChanged(bool value)
-        {
-            SettingRepository.SetBool("SyncClearSystemLogs", value);
-        }
-
-        [ObservableProperty]
-        private bool isBusy;
-
-        [ObservableProperty]
-        private string busyMessage = string.Empty;
-
-        public SnackbarMessageQueue SnackbarMessageQueue { get; }
-
-        #endregion
-
-        #region 核心数据集合
-
-        /// <summary>
-        /// 相同 IP 聚合显示列表
-        /// </summary>
-        [ObservableProperty]
-        private ObservableCollection<AggregatedIpSummary> aggregatedIps = new();
-
-        /// <summary>
-        /// 选中的聚合 IP
-        /// </summary>
-        [ObservableProperty]
-        private AggregatedIpSummary? selectedAggregatedIp;
-
-        /// <summary>
-        /// 实时登录流水（包含成功和失败）
-        /// </summary>
-        [ObservableProperty]
-        private ObservableCollection<RdpLoginRecord> realtimeRecords = new();
-
-        /// <summary>
-        /// 当前封禁黑名单
-        /// </summary>
-        [ObservableProperty]
-        private ObservableCollection<BannedIp> bannedIps = new();
-
-        #endregion
-
-        #region 设置与统计
-
-        /// <summary>
-        /// 开机自启动
-        /// </summary>
-        [ObservableProperty]
-        private bool isLaunchOnSysPowerOn;
-
-        /// <summary>
-        /// 自动封禁阈值（失败超过此次数自动封禁，0 表示不自动封禁）
-        /// </summary>
-        [ObservableProperty]
-        private int autoBanThreshold = 5;
-
-        /// <summary>
-        /// 自动封禁时间窗口（分钟，在此时间段内失败达到阈值即触发封禁，0 表示不限制时间窗口）
-        /// </summary>
-        [ObservableProperty]
-        private int autoBanWindowMinutes = 10;
-
-        /// <summary>
-        /// 手动添加封禁的 IP 输入框
-        /// </summary>
-        [ObservableProperty]
-        private string manualBanIpInput = string.Empty;
-
-        /// <summary>
-        /// 统计：总 IP 计数
-        /// </summary>
-        [ObservableProperty]
-        private int totalUniqueIps;
-
-        /// <summary>
-        /// 统计：总拦截或失败次数
-        /// </summary>
-        [ObservableProperty]
-        private int totalFailedCount;
-
-        /// <summary>
-        /// 统计：已封禁数
-        /// </summary>
-        [ObservableProperty]
-        private int totalBannedCount;
-
-        #endregion
-
-        #region 业务命令
-
-        /// <summary>
-        /// 切换选项卡
-        /// </summary>
-        [RelayCommand]
-        private void SwitchTab(AppTabType tab)
-        {
-            CurrentTab = tab;
-        }
-
-        /// <summary>
-        /// 搜索过滤
-        /// </summary>
-        [RelayCommand]
-        private void Search()
-        {
-            LoadAllData();
-        }
-
-        /// <summary>
-        /// 重置搜索
-        /// </summary>
-        [RelayCommand]
-        private void ClearSearch()
-        {
-            SearchKeyword = string.Empty;
-            LoadAllData();
-        }
-
-        /// <summary>
-        /// 封禁指定 IP
-        /// </summary>
-        [RelayCommand]
-        private void BanIp(string? ip)
-        {
-            if (string.IsNullOrWhiteSpace(ip))
-                return;
-
-            ip = ip.Trim();
-            var title = ResourceHelper.GetString("Str.Dialog.ConfirmBanTitle");
-            var msg = ResourceHelper.GetString("Str.Dialog.ConfirmBanMsg", ip);
-            var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result != MessageBoxResult.Yes)
+            var record = new RdpLoginRecord
             {
-                return;
-            }
+                EventRecordId = model.RecordId,
+                Timestamp = model.Timestamp,
+                IpAddress = model.IpAddress,
+                Port = model.Port,
+                UserName = model.UserName,
+                DomainName = model.DomainName,
+                IsSuccess = model.IsSuccess,
+                LogonType = model.LogonType,
+                LogonTypeDescription = model.LogonTypeDescription,
+                FailureReason = model.FailureReason,
+                Status = model.Status,
+                SubStatus = model.SubStatus,
+                EventSource = model.EventSource
+            };
 
-            var reason = ResourceHelper.GetString("Str.BanReason.Manual");
-            var success = BannedIpRepository.BanIp(ip, reason);
-            if (success)
+            var added = RdpRecordRepository.AddRecord(record);
+            if (added)
             {
-                ShowMessage(ResourceHelper.GetString("Str.Notify.BanSuccess", ip));
-            }
-            else
-            {
-                ShowMessage(ResourceHelper.GetString("Str.Notify.BanLimited", ip));
-            }
-        }
-
-        /// <summary>
-        /// 解封指定 IP
-        /// </summary>
-        [RelayCommand]
-        private void UnbanIp(string? ip)
-        {
-            if (string.IsNullOrWhiteSpace(ip)) return;
-            ip = ip.Trim();
-
-            BannedIpRepository.UnbanIp(ip);
-            ShowMessage(ResourceHelper.GetString("Str.Notify.UnbanSuccess", ip));
-        }
-
-        /// <summary>
-        /// 手动输入 IP 执行封禁（触发确认弹窗）
-        /// </summary>
-        [RelayCommand]
-        private void ManualBan()
-        {
-            if (string.IsNullOrWhiteSpace(ManualBanIpInput))
-            {
-                ShowMessage(ResourceHelper.GetString("Str.Notify.InputValidIp"));
-                return;
-            }
-
-            var ip = ManualBanIpInput.Trim();
-            ManualBanIpInput = string.Empty;
-            BanIp(ip);
-        }
-
-        /// <summary>
-        /// 切换开机自启动
-        /// </summary>
-        [RelayCommand]
-        private void ToggleAutoStart()
-        {
-            if (IsLaunchOnSysPowerOn)
-            {
-                var exePath = Environment.ProcessPath ?? AppContext.BaseDirectory;
-                IsLaunchOnSysPowerOn = TaskSchedulerHelper.Add(AppGlobal.AppName, exePath);
-                ShowMessage(IsLaunchOnSysPowerOn ? ResourceHelper.GetString("Str.Notify.AutoStartSuccess") : ResourceHelper.GetString("Str.Notify.AutoStartFailed"));
-            }
-            else
-            {
-                TaskSchedulerHelper.Delete(AppGlobal.AppName);
-                ShowMessage(ResourceHelper.GetString("Str.Notify.AutoStartRemoved"));
-            }
-        }
-
-        /// <summary>
-        /// 保存配置（如自动封禁阈值）
-        /// </summary>
-        [RelayCommand]
-        private void SaveSettings()
-        {
-            SettingRepository.SetInt("AutoBanThreshold", AutoBanThreshold);
-            SettingRepository.SetInt("AutoBanWindowMinutes", AutoBanWindowMinutes);
-            ShowMessage(ResourceHelper.GetString("Str.Dialog.SaveSuccessMsg"));
-        }
-
-        /// <summary>
-        /// 扫描 Windows 历史事件日志
-        /// </summary>
-        [RelayCommand]
-        private async Task ScanHistoryAsync()
-        {
-            IsBusy = true;
-            BusyMessage = ResourceHelper.GetString("Str.Notify.ScanningBusy");
-
-            try
-            {
-                var events = await Task.Run(() => _watcher.ScanHistory());
-                var records = events.Select(e => new RdpLoginRecord
+                // 自动封禁策略检测
+                if (!model.IsSuccess && AutoBanThreshold > 0 && !BannedIpRepository.IsBanned(model.IpAddress))
                 {
-                    EventRecordId = e.RecordId,
-                    Timestamp = e.Timestamp,
-                    IpAddress = e.IpAddress,
-                    Port = e.Port,
-                    UserName = e.UserName,
-                    DomainName = e.DomainName,
-                    IsSuccess = e.IsSuccess,
-                    LogonType = e.LogonType,
-                    LogonTypeDescription = e.LogonTypeDescription,
-                    FailureReason = e.FailureReason,
-                    Status = e.Status,
-                    SubStatus = e.SubStatus,
-                    EventSource = e.EventSource
-                }).ToList();
-
-                var addedCount = await Task.Run(() => RdpRecordRepository.AddRecords(records));
-                ShowMessage(ResourceHelper.GetString("Str.Notify.ScanSuccess", addedCount));
-            }
-            catch (Exception ex)
-            {
-                ShowMessage(ResourceHelper.GetString("Str.Notify.ScanError", ex.Message));
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-
-        /// <summary>
-        /// 清空所有记录
-        /// </summary>
-        [RelayCommand]
-        private void ClearAllRecords()
-        {
-            var title = ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryTitle");
-            var msg = SyncClearSystemLogs ? ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsgWithSys") : ResourceHelper.GetString("Str.Dialog.ConfirmClearHistoryMsgNoSys");
-            var result = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (result != MessageBoxResult.Yes)
-            {
-                return;
-            }
-
-            RdpRecordRepository.ClearAllRecords();
-
-            if (SyncClearSystemLogs)
-            {
-                SystemEventHelper.ClearSystemEventLogs();
-                ShowMessage(ResourceHelper.GetString("Str.Notify.ClearSuccessWithSys"));
-            }
-            else
-            {
-                ShowMessage(ResourceHelper.GetString("Str.Notify.ClearSuccess"));
-            }
-        }
-
-        /// <summary>
-        /// 刷新所有数据
-        /// </summary>
-        [RelayCommand]
-        public void LoadAllData()
-        {
-            LoadConfig();
-            LoadAggregatedIps();
-            LoadRealtimeRecords();
-            LoadBannedList();
-            LoadStats();
-        }
-
-        #endregion
-
-        #region 数据加载与实时事件处理
-
-        public void LoadConfig()
-        {
-            AutoBanThreshold = SettingRepository.GetInt("AutoBanThreshold", 5);
-            AutoBanWindowMinutes = SettingRepository.GetInt("AutoBanWindowMinutes", 10);
-            IsLaunchOnSysPowerOn = TaskSchedulerHelper.Exists(AppGlobal.AppName);
-            FilterAggregatedOnlyFailed = SettingRepository.GetBool("FilterAggregatedOnlyFailed", true);
-            FilterRealtimeOnlyFailed = SettingRepository.GetBool("FilterRealtimeOnlyFailed", true);
-            SyncClearSystemLogs = SettingRepository.GetBool("SyncClearSystemLogs", true);
-        }
-
-        private void LoadAggregatedIps()
-        {
-            var summaries = RdpRecordRepository.GetAggregatedSummaries(SearchKeyword);
-            TotalUniqueIps = summaries.Count;
-
-            if (FilterAggregatedOnlyFailed)
-            {
-                summaries = [.. summaries.Where(s => s.FailedCount > 0)];
-            }
-
-            AggregatedIps = new ObservableCollection<AggregatedIpSummary>(summaries);
-        }
-
-        private void LoadRealtimeRecords()
-        {
-            var records = RdpRecordRepository.GetRecentRecords(500, SearchKeyword, FilterRealtimeOnlyFailed);
-            RealtimeRecords = new ObservableCollection<RdpLoginRecord>(records);
-        }
-
-        private void LoadBannedList()
-        {
-            var banned = BannedIpRepository.GetAllActive();
-            BannedIps = new ObservableCollection<BannedIp>(banned);
-            TotalBannedCount = banned.Count;
-        }
-
-        private void LoadStats()
-        {
-            TotalFailedCount = RdpRecordRepository.GetTotalFailedCount();
-        }
-
-        /// <summary>
-        /// 响应底层数据库变更通知
-        /// </summary>
-        private void OnDatabaseChanged()
-        {
-            if (Application.Current?.Dispatcher.CheckAccess() == true)
-            {
-                LoadAllData();
-                return;
-            }
-
-            Application.Current?.Dispatcher.Invoke(LoadAllData);
-        }
-
-        private void OnRdpEventReceived(RdpEventModel model)
-        {
-            // 收到实时远程登录事件
-            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                var record = new RdpLoginRecord
-                {
-                    EventRecordId = model.RecordId,
-                    Timestamp = model.Timestamp,
-                    IpAddress = model.IpAddress,
-                    Port = model.Port,
-                    UserName = model.UserName,
-                    DomainName = model.DomainName,
-                    IsSuccess = model.IsSuccess,
-                    LogonType = model.LogonType,
-                    LogonTypeDescription = model.LogonTypeDescription,
-                    FailureReason = model.FailureReason,
-                    Status = model.Status,
-                    SubStatus = model.SubStatus,
-                    EventSource = model.EventSource
-                };
-
-                var added = RdpRecordRepository.AddRecord(record);
-                if (added)
-                {
-                    // 自动封禁策略检测
-                    if (!model.IsSuccess && AutoBanThreshold > 0 && !BannedIpRepository.IsBanned(model.IpAddress))
+                    var sinceTime = AutoBanWindowMinutes > 0 ? DateTime.Now.AddMinutes(-AutoBanWindowMinutes) : DateTime.MinValue;
+                    var failCount = RdpRecordRepository.GetRecentFailureCountByIp(model.IpAddress, sinceTime);
+                    if (failCount >= AutoBanThreshold)
                     {
-                        var sinceTime = AutoBanWindowMinutes > 0 ? DateTime.Now.AddMinutes(-AutoBanWindowMinutes) : DateTime.MinValue;
-                        var failCount = RdpRecordRepository.GetRecentFailureCountByIp(model.IpAddress, sinceTime);
-                        if (failCount >= AutoBanThreshold)
-                        {
-                            var reason = AutoBanWindowMinutes > 0 ? ResourceHelper.GetString("Str.BanReason.AutoBanWindow", AutoBanWindowMinutes, failCount) : ResourceHelper.GetString("Str.BanReason.TotalFail", failCount);
-                            BannedIpRepository.BanIp(model.IpAddress, reason);
+                        var reason = AutoBanWindowMinutes > 0 ? ResourceHelper.GetString("Str.BanReason.AutoBanWindow", AutoBanWindowMinutes, failCount) : ResourceHelper.GetString("Str.BanReason.TotalFail", failCount);
+                        BannedIpRepository.BanIp(model.IpAddress, reason);
 
-                            var notifyMsg = AutoBanWindowMinutes > 0 ? ResourceHelper.GetString("Str.Notify.AutoBanWindow", model.IpAddress, AutoBanWindowMinutes, failCount) : ResourceHelper.GetString("Str.Notify.DefaultFail", model.IpAddress, failCount);
-                            ShowMessage(notifyMsg);
-                        }
+                        var notifyMsg = AutoBanWindowMinutes > 0 ? ResourceHelper.GetString("Str.Notify.AutoBanWindow", model.IpAddress, AutoBanWindowMinutes, failCount) : ResourceHelper.GetString("Str.Notify.DefaultFail", model.IpAddress, failCount);
+                        ShowMessage(notifyMsg);
                     }
                 }
-            }));
-        }
-
-        private void ShowMessage(string msg)
-        {
-            SnackbarMessageQueue.Enqueue(msg);
-        }
-
-        #endregion
+            }
+        }));
     }
+
+    private void ShowMessage(string msg)
+    {
+        SnackbarMessageQueue.Enqueue(msg);
+    }
+
+    #endregion
 }

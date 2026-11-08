@@ -1,16 +1,15 @@
 using RDPGuard.Manager;
 
-namespace RDPGuard.View
+namespace RDPGuard.View;
+
+/// <summary>
+/// TrayPopupControl.xaml 的交互逻辑
+/// </summary>
+public partial class TrayPopupControl : System.Windows.Controls.UserControl
 {
-    /// <summary>
-    /// TrayPopupControl.xaml 的交互逻辑
-    /// </summary>
-    public partial class TrayPopupControl : System.Windows.Controls.UserControl
+    public TrayPopupControl()
     {
-        public TrayPopupControl()
-        {
-            InitializeComponent();
-            DataContext = Locator.TrayPopupViewModel;
-        }
+        InitializeComponent();
+        DataContext = Locator.TrayPopupViewModel;
     }
 }

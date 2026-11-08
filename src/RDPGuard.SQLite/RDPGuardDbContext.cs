@@ -1,73 +1,72 @@
 using Microsoft.EntityFrameworkCore;
 using RDPGuard.Entities;
 
-namespace RDPGuard
+namespace RDPGuard;
+
+/// <summary>
+/// RDPGuard 数据库上下文
+/// </summary>
+public class RDPGuardDbContext : DbContext
 {
-    /// <summary>
-    /// RDPGuard 数据库上下文
-    /// </summary>
-    public class RDPGuardDbContext : DbContext
+    public DbSet<RdpLoginRecord> RdpLoginRecords { get; set; } = null!;
+    public DbSet<BannedIp> BannedIps { get; set; } = null!;
+    public DbSet<Setting> Settings { get; set; } = null!;
+
+    public override int SaveChanges()
     {
-        public DbSet<RdpLoginRecord> RdpLoginRecords { get; set; } = null!;
-        public DbSet<BannedIp> BannedIps { get; set; } = null!;
-        public DbSet<Setting> Settings { get; set; } = null!;
-
-        public override int SaveChanges()
+        int affectedRows = base.SaveChanges();
+        if (affectedRows > 0)
         {
-            int affectedRows = base.SaveChanges();
-            if (affectedRows > 0)
-            {
-                DbChangeNotifier.Notify();
-            }
-
-            return affectedRows;
+            DbChangeNotifier.Notify();
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        return affectedRows;
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
         {
-            if (!optionsBuilder.IsConfigured)
-            {
-                var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppGlobal.DbFileName);
-                optionsBuilder.UseSqlite($"Data Source={dbPath}");
-            }
+            var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppGlobal.DbFileName);
+            optionsBuilder.UseSqlite($"Data Source={dbPath}");
         }
+    }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // 登录流水表
+        modelBuilder.Entity<RdpLoginRecord>(entity =>
         {
-            base.OnModelCreating(modelBuilder);
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.IpAddress);
+            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => e.EventRecordId);
+            entity.Property(e => e.IpAddress).IsRequired().HasMaxLength(64);
+            entity.Property(e => e.UserName).HasMaxLength(128);
+            entity.Property(e => e.DomainName).HasMaxLength(128);
+            entity.Property(e => e.LogonTypeDescription).HasMaxLength(64);
+            entity.Property(e => e.FailureReason).HasMaxLength(256);
+        });
 
-            // 登录流水表
-            modelBuilder.Entity<RdpLoginRecord>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.IpAddress);
-                entity.HasIndex(e => e.Timestamp);
-                entity.HasIndex(e => e.EventRecordId);
-                entity.Property(e => e.IpAddress).IsRequired().HasMaxLength(64);
-                entity.Property(e => e.UserName).HasMaxLength(128);
-                entity.Property(e => e.DomainName).HasMaxLength(128);
-                entity.Property(e => e.LogonTypeDescription).HasMaxLength(64);
-                entity.Property(e => e.FailureReason).HasMaxLength(256);
-            });
+        // 封禁表
+        modelBuilder.Entity<BannedIp>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.IpAddress);
+            entity.HasIndex(e => e.IsActive);
+            entity.Property(e => e.IpAddress).IsRequired().HasMaxLength(64);
+            entity.Property(e => e.Reason).HasMaxLength(256);
+        });
 
-            // 封禁表
-            modelBuilder.Entity<BannedIp>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.IpAddress);
-                entity.HasIndex(e => e.IsActive);
-                entity.Property(e => e.IpAddress).IsRequired().HasMaxLength(64);
-                entity.Property(e => e.Reason).HasMaxLength(256);
-            });
-
-            // 配置表
-            modelBuilder.Entity<Setting>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.Key).IsUnique();
-                entity.Property(e => e.Key).IsRequired().HasMaxLength(64);
-                entity.Property(e => e.Value).IsRequired();
-            });
-        }
+        // 配置表
+        modelBuilder.Entity<Setting>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Key).IsUnique();
+            entity.Property(e => e.Key).IsRequired().HasMaxLength(64);
+            entity.Property(e => e.Value).IsRequired();
+        });
     }
 }

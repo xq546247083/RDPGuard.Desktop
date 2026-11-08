@@ -7,110 +7,109 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows;
 
-namespace RDPGuard.ViewModel
+namespace RDPGuard.ViewModel;
+
+/// <summary>
+/// 托盘悬浮窗口 ViewModel
+/// </summary>
+public partial class TrayPopupViewModel : ObservableObject
 {
     /// <summary>
-    /// 托盘悬浮窗口 ViewModel
+    /// 构造方法
     /// </summary>
-    public partial class TrayPopupViewModel : ObservableObject
+    public TrayPopupViewModel()
     {
-        /// <summary>
-        /// 构造方法
-        /// </summary>
-        public TrayPopupViewModel()
-        {
-            DbChangeNotifier.OnDatabaseChanged += OnDatabaseChanged;
-            LoadAllData();
-        }
-
-        #region 绑定属性
-
-        /// <summary>
-        /// 当前封禁的 IP 数量
-        /// </summary>
-        [ObservableProperty]
-        private int bannedCount;
-
-        /// <summary>
-        /// 今日登录尝试次数
-        /// </summary>
-        [ObservableProperty]
-        private int todayAttemptsCount;
-
-        /// <summary>
-        /// 最近的 5 条远程登录记录
-        /// </summary>
-        [ObservableProperty]
-        private ObservableCollection<RdpLoginRecord> recentRecords = new();
-
-        #endregion
-
-        #region 命令
-
-        /// <summary>
-        /// 打开主窗口
-        /// </summary>
-        [RelayCommand]
-        private void OpenMainWindow()
-        {
-            Locator.OpenMainWindow();
-            NotifyIconManager.Close();
-        }
-
-        /// <summary>
-        /// 退出应用
-        /// </summary>
-        [RelayCommand]
-        private void Exit()
-        {
-            Environment.Exit(0);
-        }
-
-        #endregion
-
-        #region 公共方法
-
-        /// <summary>
-        /// 重新载入托盘状态
-        /// </summary>
-        public void LoadAllData()
-        {
-            try
-            {
-                // 统计数据
-                var activeBans = BannedIpRepository.GetAllActive();
-                BannedCount = activeBans.Count;
-
-                var recent = RdpRecordRepository.GetRecentRecords(5);
-                RecentRecords = new ObservableCollection<RdpLoginRecord>(recent);
-
-                var today = DateTime.Today;
-                TodayAttemptsCount = RdpRecordRepository.GetRecentRecords(1000).Count(r => r.Timestamp >= today);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"ReLoad 托盘数据异常: {ex.Message}");
-            }
-        }
-
-        #endregion
-
-        #region 私有方法
-
-        /// <summary>
-        /// 响应底层数据库变更通知
-        /// </summary>
-        private void OnDatabaseChanged()
-        {
-            if (Application.Current.Dispatcher.CheckAccess())
-            {
-                LoadAllData();
-                return;
-            }
-
-            Application.Current.Dispatcher.Invoke(LoadAllData);
-        }
-
-        #endregion
+        DbChangeNotifier.OnDatabaseChanged += OnDatabaseChanged;
+        LoadAllData();
     }
+
+    #region 绑定属性
+
+    /// <summary>
+    /// 当前封禁的 IP 数量
+    /// </summary>
+    [ObservableProperty]
+    private int bannedCount;
+
+    /// <summary>
+    /// 今日登录尝试次数
+    /// </summary>
+    [ObservableProperty]
+    private int todayAttemptsCount;
+
+    /// <summary>
+    /// 最近的 5 条远程登录记录
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<RdpLoginRecord> recentRecords = new();
+
+    #endregion
+
+    #region 命令
+
+    /// <summary>
+    /// 打开主窗口
+    /// </summary>
+    [RelayCommand]
+    private void OpenMainWindow()
+    {
+        Locator.OpenMainWindow();
+        NotifyIconManager.Close();
+    }
+
+    /// <summary>
+    /// 退出应用
+    /// </summary>
+    [RelayCommand]
+    private void Exit()
+    {
+        Environment.Exit(0);
+    }
+
+    #endregion
+
+    #region 公共方法
+
+    /// <summary>
+    /// 重新载入托盘状态
+    /// </summary>
+    public void LoadAllData()
+    {
+        try
+        {
+            // 统计数据
+            var activeBans = BannedIpRepository.GetAllActive();
+            BannedCount = activeBans.Count;
+
+            var recent = RdpRecordRepository.GetRecentRecords(5);
+            RecentRecords = new ObservableCollection<RdpLoginRecord>(recent);
+
+            var today = DateTime.Today;
+            TodayAttemptsCount = RdpRecordRepository.GetRecentRecords(1000).Count(r => r.Timestamp >= today);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"ReLoad 托盘数据异常: {ex.Message}");
+        }
+    }
+
+    #endregion
+
+    #region 私有方法
+
+    /// <summary>
+    /// 响应底层数据库变更通知
+    /// </summary>
+    private void OnDatabaseChanged()
+    {
+        if (Application.Current.Dispatcher.CheckAccess())
+        {
+            LoadAllData();
+            return;
+        }
+
+        Application.Current.Dispatcher.Invoke(LoadAllData);
+    }
+
+    #endregion
 }
