@@ -28,7 +28,7 @@ public partial class MainViewModel : ObservableObject
 
         _watcher.OnRdpEventReceived += OnRdpEventReceived;
         _watcher.Start();
-        
+
         LoadAllData();
     }
 
