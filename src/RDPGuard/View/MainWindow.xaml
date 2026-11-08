@@ -183,7 +183,7 @@
                     </Button>
 
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Command="{Binding RefreshAllCommand}"
+                            Command="{Binding LoadAllDataCommand}"
                             ToolTip="{DynamicResource Str.Action.Refresh}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Refresh" VerticalAlignment="Center" Margin="0,0,6,0"/>

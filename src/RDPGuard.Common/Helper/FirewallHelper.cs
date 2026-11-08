@@ -26,9 +26,10 @@ public static class FirewallHelper
 
         lock (_policyLock)
         {
+            object? policyObj = null;
             try
             {
-                var policyObj = CreatePolicy();
+                policyObj = CreatePolicy();
                 if (policyObj != null)
                 {
                     dynamic policy = policyObj;
@@ -68,6 +69,10 @@ public static class FirewallHelper
             {
                 Debug.WriteLine($"[FirewallHelper.BlockIp COM 异常]: {ex.Message}");
             }
+            finally
+            {
+                ReleaseComObject(policyObj);
+            }
 
             return false;
         }
@@ -85,9 +90,10 @@ public static class FirewallHelper
 
         lock (_policyLock)
         {
+            object? policyObj = null;
             try
             {
-                var policyObj = CreatePolicy();
+                policyObj = CreatePolicy();
                 if (policyObj != null)
                 {
                     dynamic policy = policyObj;
@@ -129,6 +135,10 @@ public static class FirewallHelper
             {
                 Debug.WriteLine($"[FirewallHelper.UnblockIp COM 异常]: {ex.Message}");
             }
+            finally
+            {
+                ReleaseComObject(policyObj);
+            }
 
             return false;
         }
@@ -146,9 +156,10 @@ public static class FirewallHelper
 
         lock (_policyLock)
         {
+            object? policyObj = null;
             try
             {
-                var policyObj = CreatePolicy();
+                policyObj = CreatePolicy();
                 if (policyObj != null)
                 {
                     dynamic policy = policyObj;
@@ -174,6 +185,10 @@ public static class FirewallHelper
                 }
             }
             catch { }
+            finally
+            {
+                ReleaseComObject(policyObj);
+            }
 
             return false;
         }
@@ -187,9 +202,10 @@ public static class FirewallHelper
         lock (_policyLock)
         {
             var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            object? policyObj = null;
             try
             {
-                var policyObj = CreatePolicy();
+                policyObj = CreatePolicy();
                 if (policyObj != null)
                 {
                     dynamic policy = policyObj;
@@ -217,6 +233,10 @@ public static class FirewallHelper
             {
                 Debug.WriteLine($"[FirewallHelper.GetAllBlockedIps 异常]: {ex.Message}");
             }
+            finally
+            {
+                ReleaseComObject(policyObj);
+            }
             return result;
         }
     }
@@ -239,9 +259,10 @@ public static class FirewallHelper
 
         lock (_policyLock)
         {
+            object? policyObj = null;
             try
             {
-                var policyObj = CreatePolicy();
+                policyObj = CreatePolicy();
                 if (policyObj == null) return false;
 
                 dynamic policy = policyObj;
@@ -280,6 +301,10 @@ public static class FirewallHelper
             {
                 Debug.WriteLine($"[FirewallHelper.SyncAllBlockedIps 异常]: {ex.Message}");
                 return false;
+            }
+            finally
+            {
+                ReleaseComObject(policyObj);
             }
         }
     }

@@ -168,7 +168,7 @@
                            Foreground="{DynamicResource Brush.Surface.SubText}"
                            HorizontalAlignment="Center"
                            Margin="0,8"
-                           Visibility="{Binding RecentRecords.Count, Converter={StaticResource BooleanToVisibilityConverter}}">
+>
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Setter Property="Visibility" Value="Collapsed"/>

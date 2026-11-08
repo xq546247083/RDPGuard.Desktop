@@ -202,6 +202,7 @@ public static class RdpRecordRepository
         {
             using var context = new RDPGuardDbContext();
             context.RdpLoginRecords.ExecuteDelete();
+            DbChangeNotifier.Notify();
         }
     }
 }
