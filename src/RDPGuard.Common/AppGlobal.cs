@@ -25,5 +25,9 @@ namespace RDPGuard
         /// </summary>
         public static string FirewallRuleGroupName = "RDPGuard";
 
+        /// <summary>
+        /// 数据库文件名称
+        /// </summary>
+        public static string DbFileName = "rdpguard.db";
     }
 }

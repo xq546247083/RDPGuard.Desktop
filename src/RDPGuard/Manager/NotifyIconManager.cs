@@ -1,6 +1,7 @@
 using Hardcodet.Wpf.TaskbarNotification;
 using System.Drawing;
 using System.Reflection;
+using System.Windows;
 
 namespace RDPGuard.Manager
 {
@@ -54,7 +55,7 @@ namespace RDPGuard.Manager
         /// <summary>
         /// 双击系统托盘图标
         /// </summary>
-        private static void TaskbarIcon_TrayMouseDoubleClick(object sender, System.Windows.RoutedEventArgs e)
+        private static void TaskbarIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e)
         {
             Lactor.OpenMainWindow();
         }
@@ -62,9 +63,8 @@ namespace RDPGuard.Manager
         /// <summary>
         /// 右键点击系统托盘图标弹出悬浮窗口
         /// </summary>
-        private static void TaskbarIcon_TrayRightMouseUp(object sender, System.Windows.RoutedEventArgs e)
+        private static void TaskbarIcon_TrayRightMouseUp(object sender, RoutedEventArgs e)
         {
-            Lactor.TrayPopupViewModel.ReLoad();
             taskbarIcon?.ShowTrayPopup();
         }
 
@@ -73,13 +73,13 @@ namespace RDPGuard.Manager
         /// </summary>
         private static void PreLoadNotifyUI()
         {
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(() =>
+            Application.Current.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(() =>
             {
-                var dummyWindow = new System.Windows.Window
+                var dummyWindow = new Window
                 {
                     Width = 0,
                     Height = 0,
-                    WindowStyle = System.Windows.WindowStyle.None,
+                    WindowStyle = WindowStyle.None,
                     ShowInTaskbar = false,
                     ShowActivated = false,
                     AllowsTransparency = true,

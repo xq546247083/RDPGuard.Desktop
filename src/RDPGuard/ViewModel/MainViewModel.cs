@@ -5,7 +5,6 @@ using RDPGuard.Common;
 using RDPGuard.Entities;
 using RDPGuard.Enums;
 using RDPGuard.Helper;
-using RDPGuard.Manager;
 using RDPGuard.Model;
 using RDPGuard.Repositories;
 using RDPGuard.Service;
@@ -23,10 +22,14 @@ namespace RDPGuard.ViewModel
 
         public MainViewModel()
         {
+            AppTitle = $"{AppGlobal.AppChineseName} V{System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0"}";
             SnackbarMessageQueue = new SnackbarMessageQueue(TimeSpan.FromSeconds(3));
+            DbChangeNotifier.OnDatabaseChanged += OnDatabaseChanged;
 
             _watcher.OnRdpEventReceived += OnRdpEventReceived;
             _watcher.Start();
+            
+            LoadAllData();
         }
 
         #region 基础属性与选项卡
@@ -49,7 +52,7 @@ namespace RDPGuard.ViewModel
         partial void OnFilterAggregatedOnlyFailedChanged(bool value)
         {
             SettingRepository.SetBool("FilterAggregatedOnlyFailed", value);
-            LoadAggregatedIps();
+            LoadAllData();
         }
 
         /// <summary>
@@ -61,7 +64,7 @@ namespace RDPGuard.ViewModel
         partial void OnFilterRealtimeOnlyFailedChanged(bool value)
         {
             SettingRepository.SetBool("FilterRealtimeOnlyFailed", value);
-            LoadRealtimeRecords();
+            LoadAllData();
         }
 
         /// <summary>
@@ -176,8 +179,7 @@ namespace RDPGuard.ViewModel
         [RelayCommand]
         private void Search()
         {
-            LoadAggregatedIps();
-            LoadRealtimeRecords();
+            LoadAllData();
         }
 
         /// <summary>
@@ -187,8 +189,7 @@ namespace RDPGuard.ViewModel
         private void ClearSearch()
         {
             SearchKeyword = string.Empty;
-            LoadAggregatedIps();
-            LoadRealtimeRecords();
+            LoadAllData();
         }
 
         /// <summary>
@@ -219,8 +220,6 @@ namespace RDPGuard.ViewModel
             {
                 ShowMessage(ResourceHelper.GetString("Str.Notify.BanLimited", ip));
             }
-
-            RefreshAll();
         }
 
         /// <summary>
@@ -234,7 +233,6 @@ namespace RDPGuard.ViewModel
 
             BannedIpRepository.UnbanIp(ip);
             ShowMessage(ResourceHelper.GetString("Str.Notify.UnbanSuccess", ip));
-            RefreshAll();
         }
 
         /// <summary>
@@ -263,7 +261,7 @@ namespace RDPGuard.ViewModel
             if (IsLaunchOnSysPowerOn)
             {
                 var exePath = Environment.ProcessPath ?? AppContext.BaseDirectory;
-                IsLaunchOnSysPowerOn = TaskSchedulerHelper.AddLaunchTask(AppGlobal.AppName, exePath);
+                IsLaunchOnSysPowerOn = TaskSchedulerHelper.Add(AppGlobal.AppName, exePath);
                 ShowMessage(IsLaunchOnSysPowerOn ? ResourceHelper.GetString("Str.Notify.AutoStartSuccess") : ResourceHelper.GetString("Str.Notify.AutoStartFailed"));
             }
             else
@@ -271,7 +269,6 @@ namespace RDPGuard.ViewModel
                 TaskSchedulerHelper.Delete(AppGlobal.AppName);
                 ShowMessage(ResourceHelper.GetString("Str.Notify.AutoStartRemoved"));
             }
-            Lactor.TrayPopupViewModel.ReLoad();
         }
 
         /// <summary>
@@ -316,7 +313,6 @@ namespace RDPGuard.ViewModel
 
                 var addedCount = await Task.Run(() => RdpRecordRepository.AddRecords(records));
                 ShowMessage(ResourceHelper.GetString("Str.Notify.ScanSuccess", addedCount));
-                RefreshAll();
             }
             catch (Exception ex)
             {
@@ -353,38 +349,33 @@ namespace RDPGuard.ViewModel
             {
                 ShowMessage(ResourceHelper.GetString("Str.Notify.ClearSuccess"));
             }
-
-            RefreshAll();
         }
 
         /// <summary>
         /// 刷新所有数据
         /// </summary>
         [RelayCommand]
-        public void RefreshAll()
+        public void LoadAllData()
         {
+            LoadConfig();
             LoadAggregatedIps();
             LoadRealtimeRecords();
             LoadBannedList();
-            UpdateStats();
-            Lactor.TrayPopupViewModel.ReLoad();
+            LoadStats();
         }
 
         #endregion
 
         #region 数据加载与实时事件处理
 
-        public void LoadAllData()
+        public void LoadConfig()
         {
-            // 加载配置
             AutoBanThreshold = SettingRepository.GetInt("AutoBanThreshold", 5);
             AutoBanWindowMinutes = SettingRepository.GetInt("AutoBanWindowMinutes", 10);
-            IsLaunchOnSysPowerOn = TaskSchedulerHelper.Get(AppGlobal.AppName) != null;
+            IsLaunchOnSysPowerOn = TaskSchedulerHelper.Exists(AppGlobal.AppName);
             FilterAggregatedOnlyFailed = SettingRepository.GetBool("FilterAggregatedOnlyFailed", true);
             FilterRealtimeOnlyFailed = SettingRepository.GetBool("FilterRealtimeOnlyFailed", true);
             SyncClearSystemLogs = SettingRepository.GetBool("SyncClearSystemLogs", true);
-
-            RefreshAll();
         }
 
         private void LoadAggregatedIps()
@@ -413,9 +404,23 @@ namespace RDPGuard.ViewModel
             TotalBannedCount = banned.Count;
         }
 
-        private void UpdateStats()
+        private void LoadStats()
         {
             TotalFailedCount = RdpRecordRepository.GetTotalFailedCount();
+        }
+
+        /// <summary>
+        /// 响应底层数据库变更通知
+        /// </summary>
+        private void OnDatabaseChanged()
+        {
+            if (Application.Current?.Dispatcher.CheckAccess() == true)
+            {
+                LoadAllData();
+                return;
+            }
+
+            Application.Current?.Dispatcher.Invoke(LoadAllData);
         }
 
         private void OnRdpEventReceived(RdpEventModel model)
@@ -457,9 +462,6 @@ namespace RDPGuard.ViewModel
                             ShowMessage(notifyMsg);
                         }
                     }
-
-                    // 刷新视图
-                    RefreshAll();
                 }
             }));
         }

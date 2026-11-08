@@ -7,7 +7,7 @@ using System.Windows.Interop;
 namespace RDPGuard.Manager
 {
     /// <summary>
-    /// 加载器与窗口管理
+    /// 加载器
     /// </summary>
     public static class Lactor
     {
@@ -28,29 +28,41 @@ namespace RDPGuard.Manager
         /// <summary>
         /// 主窗口 ViewModel
         /// </summary>
-        public static MainViewModel MainViewModel { get; } = new MainViewModel();
+        public static MainViewModel MainViewModel
+        {
+            get;
+        } = new MainViewModel();
 
         /// <summary>
         /// 主窗口
         /// </summary>
-        public static MainWindow MainWindow { get; } = new MainWindow();
+        public static MainWindow MainWindow
+        {
+            get;
+        } = new MainWindow();
 
         /// <summary>
         /// 托盘菜单 ViewModel
         /// </summary>
-        public static TrayPopupViewModel TrayPopupViewModel { get; } = new TrayPopupViewModel();
+        public static TrayPopupViewModel TrayPopupViewModel
+        {
+            get;
+        } = new TrayPopupViewModel();
 
         /// <summary>
         /// 托盘菜单
         /// </summary>
-        public static TrayPopupControl TrayPopupControl { get; } = new TrayPopupControl();
+        public static TrayPopupControl TrayPopupControl
+        {
+            get;
+        } = new TrayPopupControl();
 
         #endregion
 
         #region 公共方法
 
         /// <summary>
-        /// 打开主窗口并前置激活
+        /// 打开主窗口
         /// </summary>
         public static void OpenMainWindow()
         {
@@ -78,12 +90,15 @@ namespace RDPGuard.Manager
         }
 
         /// <summary>
-        /// 显示轻量通知
+        /// 显示消息
         /// </summary>
+        /// <param name="message">消息内容</param>
         public static void ShowToolTip(string message)
         {
             if (Application.Current == null)
+            {
                 return;
+            }
 
             if (Application.Current.Dispatcher.CheckAccess())
             {
@@ -95,15 +110,6 @@ namespace RDPGuard.Manager
             {
                 MainViewModel.SnackbarMessageQueue.Enqueue(message);
             });
-        }
-
-        /// <summary>
-        /// 重载数据
-        /// </summary>
-        public static void ReLoad()
-        {
-            MainViewModel.LoadAllData();
-            TrayPopupViewModel.ReLoad();
         }
 
         #endregion

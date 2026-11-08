@@ -3,14 +3,14 @@ using Microsoft.Win32.TaskScheduler;
 namespace RDPGuard.Helper
 {
     /// <summary>
-    /// 计划任务帮助类（开机以最高管理员权限自启）
+    /// 计划任务帮助类
     /// </summary>
     public static class TaskSchedulerHelper
     {
         /// <summary>
         /// 删除任务
         /// </summary>
-        /// <param name="taskName"></param>
+        /// <param name="taskName">任务名称</param>
         public static void Delete(string taskName)
         {
             using (var ts = new TaskService())
@@ -20,32 +20,32 @@ namespace RDPGuard.Helper
         }
 
         /// <summary>
-        /// 获取任务
+        /// 检查任务是否存在
         /// </summary>
-        /// <param name="taskName"></param>
-        /// <returns></returns>
-        public static Microsoft.Win32.TaskScheduler.Task? Get(string taskName)
+        /// <param name="taskName">任务名称</param>
+        /// <returns>是否存在</returns>
+        public static bool Exists(string taskName)
         {
             using (var ts = new TaskService())
             {
-                return ts.FindTask(taskName);
+                return ts.FindTask(taskName) != null;
             }
         }
 
         /// <summary>
         /// 添加启动任务
         /// </summary>
-        /// <param name="taskName"></param>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public static bool AddLaunchTask(string taskName, string path)
+        /// <param name="taskName">任务名称</param>
+        /// <param name="path">程序路径</param>
+        /// <returns>是否成功</returns>
+        public static bool Add(string taskName, string path)
         {
             using (var ts = new TaskService())
             {
                 var existingTask = ts.FindTask(taskName);
                 if (existingTask != null)
                 {
-                    ts.RootFolder.DeleteTask(taskName, false);
+                    ts.RootFolder.DeleteTask(taskName, exceptionOnNotExists: false);
                 }
 
                 var td = ts.NewTask();
@@ -53,7 +53,7 @@ namespace RDPGuard.Helper
                 td.RegistrationInfo.Description = AppGlobal.AppChineseName;
                 td.Principal.RunLevel = TaskRunLevel.Highest;
 
-                // 触发类型: 用户登录时
+                // 触发类型: 登录时
                 td.Triggers.Add(new LogonTrigger());
 
                 // 动作: 执行程序

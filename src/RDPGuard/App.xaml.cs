@@ -25,7 +25,6 @@ namespace RDPGuard
 
             DbInitializer.Initialize();
             NotifyIconManager.Init();
-            Lactor.ReLoad();
             Task.Run(BannedIpRepository.SyncFirewallRules);
         }
 
@@ -64,13 +63,16 @@ namespace RDPGuard
         {
             try
             {
-                var currentProcess = Process.GetCurrentProcess();
+                using var currentProcess = Process.GetCurrentProcess();
                 var processList = Process.GetProcessesByName(currentProcess.ProcessName);
                 foreach (var item in processList)
                 {
-                    if (item.Id != currentProcess.Id)
+                    using (item)
                     {
-                        return true;
+                        if (item.Id != currentProcess.Id)
+                        {
+                            return true;
+                        }
                     }
                 }
             }

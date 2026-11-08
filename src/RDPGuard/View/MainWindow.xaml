@@ -6,7 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:convert="clr-namespace:RDPGuard.Convert"
         mc:Ignorable="d"
-        Title="{DynamicResource Str.App.Title}"
+        Title="{Binding AppTitle}"
         Height="740"
         Width="1160"
         MinHeight="620"
@@ -22,12 +22,6 @@
         Closing="MainWindow_Closing">
 
     <Window.Resources>
-        <convert:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
-        <convert:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-        <convert:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
-        <convert:ResultToBrushConverter x:Key="ResultToBrushConverter" />
-        <convert:BlockedToBrushConverter x:Key="BlockedToBrushConverter" />
-        <convert:BlockedToTextConverter x:Key="BlockedToTextConverter" />
 
         <!-- 现代化 DataGrid 表头样式 -->
         <Style x:Key="ModernDataGridColumnHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
@@ -400,6 +394,10 @@
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
                               CanUserSortColumns="True"
+                              EnableRowVirtualization="True"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.CanContentScroll="True"
                               FrozenColumnCount="3"
                               ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
                               RowStyle="{StaticResource ModernDataGridRow}"
@@ -543,6 +541,10 @@
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
                               CanUserSortColumns="True"
+                              EnableRowVirtualization="True"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.CanContentScroll="True"
                               FrozenColumnCount="3"
                               ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
                               RowStyle="{StaticResource ModernDataGridRow}"
@@ -697,6 +699,10 @@
                               ItemsSource="{Binding BannedIps}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
+                              EnableRowVirtualization="True"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.CanContentScroll="True"
                               FrozenColumnCount="2"
                               ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
                               RowStyle="{StaticResource ModernDataGridRow}"

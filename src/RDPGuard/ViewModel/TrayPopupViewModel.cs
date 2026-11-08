@@ -5,6 +5,7 @@ using RDPGuard.Manager;
 using RDPGuard.Repositories;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Windows;
 
 namespace RDPGuard.ViewModel
 {
@@ -13,9 +14,13 @@ namespace RDPGuard.ViewModel
     /// </summary>
     public partial class TrayPopupViewModel : ObservableObject
     {
+        /// <summary>
+        /// 构造方法
+        /// </summary>
         public TrayPopupViewModel()
         {
-            ReLoad();
+            DbChangeNotifier.OnDatabaseChanged += OnDatabaseChanged;
+            LoadAllData();
         }
 
         #region 绑定属性
@@ -68,7 +73,7 @@ namespace RDPGuard.ViewModel
         /// <summary>
         /// 重新载入托盘状态
         /// </summary>
-        public void ReLoad()
+        public void LoadAllData()
         {
             try
             {
@@ -86,6 +91,24 @@ namespace RDPGuard.ViewModel
             {
                 Debug.WriteLine($"ReLoad 托盘数据异常: {ex.Message}");
             }
+        }
+
+        #endregion
+
+        #region 私有方法
+
+        /// <summary>
+        /// 响应底层数据库变更通知
+        /// </summary>
+        private void OnDatabaseChanged()
+        {
+            if (Application.Current.Dispatcher.CheckAccess())
+            {
+                LoadAllData();
+                return;
+            }
+
+            Application.Current.Dispatcher.Invoke(LoadAllData);
         }
 
         #endregion

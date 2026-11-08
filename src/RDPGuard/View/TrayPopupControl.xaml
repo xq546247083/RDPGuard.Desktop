@@ -7,10 +7,6 @@
              xmlns:convert="clr-namespace:RDPGuard.Convert"
              mc:Ignorable="d">
 
-    <UserControl.Resources>
-        <convert:ResultToBrushConverter x:Key="ResultToBrushConverter" />
-        <convert:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-    </UserControl.Resources>
 
     <materialDesign:Card UniformCornerRadius="8"
                          Background="{DynamicResource MaterialDesignPaper}"

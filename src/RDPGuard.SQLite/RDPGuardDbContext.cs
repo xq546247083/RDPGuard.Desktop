@@ -12,17 +12,22 @@ namespace RDPGuard
         public DbSet<BannedIp> BannedIps { get; set; } = null!;
         public DbSet<Setting> Settings { get; set; } = null!;
 
+        public override int SaveChanges()
+        {
+            int affectedRows = base.SaveChanges();
+            if (affectedRows > 0)
+            {
+                DbChangeNotifier.Notify();
+            }
+
+            return affectedRows;
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
-                var dbDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-                if (!Directory.Exists(dbDirectory))
-                {
-                    Directory.CreateDirectory(dbDirectory);
-                }
-
-                var dbPath = Path.Combine(dbDirectory, "rdpguard.db");
+                var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppGlobal.DbFileName);
                 optionsBuilder.UseSqlite($"Data Source={dbPath}");
             }
         }
